@@ -1,0 +1,70 @@
+# FinSc-Box QuickCheck Property Specification
+
+This literate specification tests invariants of **FinSc-Box** across hundreds of pseudo-randomly
+generated scalars, coordinates, and vectors.
+
+```idris
+module Wiki.BoxPropertySpec
+
+import Data.Vect
+import QuickCheck
+import FinScBox
+
+%default total
+```
+
+## 1. QuickCheck Invariants
+
+### Property 1: BoxInt Ring Inverse Cancellation
+For any integer scalar $a$, $a + (-a) \equiv 0$:
+
+```idris
+public export
+prop_boxIntNegCancel : Integer -> Bool
+prop_boxIntNegCancel a =
+  let b = intToBoxInt a
+  in (b + negate b) == intToBoxInt 0
+```
+
+### Property 2: Cross Product Orthogonality
+The 3D cross product $u \times v$ is strictly orthogonal to $u$:
+$$(u \times v) \cdot u \equiv 0$$
+
+```idris
+public export
+prop_crossProductOrthogonal : Integer -> Integer -> Integer -> Bool
+prop_crossProductOrthogonal x y z =
+  let u = [intToBoxInt x, intToBoxInt y, intToBoxInt z]
+      v = [intToBoxInt 1, intToBoxInt 0, intToBoxInt 0]
+      w = crossProduct3 u v
+  in dotProduct3 w u == intToBoxInt 0
+```
+
+### Property 3: Grover Reflection Invariance
+Applying the Grover reflection matrix $G_3$ twice yields identity scaling:
+$$G_3(G_3(v)) \equiv 9 v$$
+
+```idris
+public export
+prop_groverInvolutionScaled : Integer -> Integer -> Integer -> Bool
+prop_groverInvolutionScaled x y z =
+  let v = [intToBoxInt x, intToBoxInt y, intToBoxInt z]
+      g1 = applyGroverScaled3 v
+      g2 = applyGroverScaled3 g1
+  in g2 == [intToBoxInt (9 * x), intToBoxInt (9 * y), intToBoxInt (9 * z)]
+```
+
+## 2. Dynamic Execution Suite
+
+```idris
+public export
+auditBoxProperties : IO Bool
+auditBoxProperties = do
+  putStrLn "  [FinSc-Box-QuickCheck] Core Properties:"
+  let r1 = qc prop_boxIntNegCancel
+  let r2 = qc3 prop_crossProductOrthogonal
+  let r3 = qc3 prop_groverInvolutionScaled
+  let pass = (r1.pass == Just True) && (r2.pass == Just True) && (r3.pass == Just True)
+  putStrLn ("  - NegCancel (100 tests), CrossOrthogonal (100 tests), GroverInvolution (100 tests) -> pass=" ++ show pass)
+  pure pass
+```

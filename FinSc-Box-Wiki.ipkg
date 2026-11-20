@@ -1,0 +1,17 @@
+package FinSc-Box-Wiki
+version = 0.1.0
+authors = "Justin"
+brief   = "FinSc-Box-Wiki: Literate Verification Suite for FinSc-Box"
+
+depends = base >= 0.8.0
+        , linear
+        , FinSc-Box
+        , idris2-QuickCheck
+
+modules = Wiki.BoxCoreSpec
+        , Wiki.BoxPropertySpec
+        , Wiki.Main
+
+main       = Wiki.Main
+executable = "finsc-box-wiki"
+sourcedir  = "Library"
