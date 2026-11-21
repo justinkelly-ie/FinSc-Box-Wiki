@@ -54,6 +54,40 @@ prop_groverInvolutionScaled x y z =
   in g2 == [intToBoxInt (9 * x), intToBoxInt (9 * y), intToBoxInt (9 * z)]
 ```
 
+### Property 4: Canonical Multiset Codec Parity & Round-Trip
+For any signed scalar Laurent shift $n$, `renderPureMultiset` matches `Show` verbatim, passes the total `Dec` text recognizer, and parses back to the identical canonical `PureMultiset`:
+
+```idris
+public export
+prop_codecScalarRoundTrip : Integer -> Bool
+prop_codecScalarRoundTrip n =
+  let m   = scalarKeyHMSet n
+      txt = renderPureMultiset m
+  in (txt == show m) &&
+     isValidPureMultisetText txt &&
+     (case parsePureMultiset txt of
+        Just m' => m' == m
+        Nothing => False)
+```
+
+### Property 5: Black/Red Zoom Time & Space Exact Round-Trip
+For bounded Black/Red shifts $k \bmod 5$, opposite shifts annihilate to `[]` and both `zoomTime` and `zoomSpace` invert cleanly back to `sampleUnitPairMSet`:
+
+```idris
+public export
+mod5 : Nat -> Nat
+mod5 (S (S (S (S (S k))))) = mod5 k
+mod5 r                     = r
+
+public export
+prop_blackRedZoomRoundTrip : Nat -> Bool
+prop_blackRedZoomRoundTrip n =
+  let k = mod5 n
+  in (addHMSet (blackShift k) (redShift k) == emptyPureMSet) &&
+     (zoomTime  (redShift k) (zoomTime  (blackShift k) sampleUnitPairMSet) == sampleUnitPairMSet) &&
+     (zoomSpace (redShift k) (zoomSpace (blackShift k) sampleUnitPairMSet) == sampleUnitPairMSet)
+```
+
 ## 2. Dynamic Execution Suite
 
 ```idris
@@ -64,7 +98,13 @@ auditBoxProperties = do
   let r1 = qc prop_boxIntNegCancel
   let r2 = qc3 prop_crossProductOrthogonal
   let r3 = qc3 prop_groverInvolutionScaled
-  let pass = (r1.pass == Just True) && (r2.pass == Just True) && (r3.pass == Just True)
-  putStrLn ("  - NegCancel (100 tests), CrossOrthogonal (100 tests), GroverInvolution (100 tests) -> pass=" ++ show pass)
+  let r4 = qc prop_codecScalarRoundTrip
+  let r5 = qc prop_blackRedZoomRoundTrip
+  let pass = (r1.pass == Just True) &&
+             (r2.pass == Just True) &&
+             (r3.pass == Just True) &&
+             (r4.pass == Just True) &&
+             (r5.pass == Just True)
+  putStrLn ("  - NegCancel, CrossOrthogonal, GroverInvolution, CodecRoundTrip, BlackRedZoom (100 tests each) -> pass=" ++ show pass)
   pure pass
 ```

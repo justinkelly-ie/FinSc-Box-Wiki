@@ -43,7 +43,28 @@ public export
 prfWikiTripleSpread = prfTripleSpreadEquilateral
 ```
 
-## 3. Dynamic Verification Suite
+## 3. Canonical Multiset Codec & Black/Red Zoom Laws
+
+The promoted `Stage1.MultisetCodec` and `Stage1.BlackRedZoom` modules preserve canonical serialization parity and exact wrap/unwrap & Laurent-shift round-trips at `QTT 0`:
+
+```idris
+public export
+0 prfBoxCoreCodecRoundTrip :
+  (let b1 = Stage0.HereditaryMSet.scalarKeyHMSet 1
+   in case Stage1.MultisetCodec.parsePureMultiset
+             (Stage1.MultisetCodec.renderPureMultiset b1) of
+        Just m  => m == b1
+        Nothing => False) = True
+prfBoxCoreCodecRoundTrip = Refl
+
+public export
+0 prfBoxCoreZoomSpaceRoundTrip :
+  (zoomSpace (redShift 1) (zoomSpace (blackShift 1) Stage1.BlackRedZoom.sampleUnitPairMSet)
+   == Stage1.BlackRedZoom.sampleUnitPairMSet) = True
+prfBoxCoreZoomSpaceRoundTrip = Refl
+```
+
+## 4. Dynamic Verification Suite
 
 ```idris
 public export
@@ -53,7 +74,13 @@ auditBoxCoreProof = do
   let normZero = sumHMSet (the PureMultiset emptyHMSet) == intToBoxInt 0
   let isCan = isCanonicalHMSet (the PureMultiset emptyHMSet)
   let spreadOk = equilateralSpreadNum == 3 && equilateralSpreadDen == 4
-  let pass = normZero && isCan && spreadOk
-  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4 -> pass=" ++ show pass)
+  let txt = renderPureMultiset sampleUnitPairMSet
+  let codecOk = txt == show sampleUnitPairMSet &&
+                (case parsePureMultiset txt of
+                   Just m' => m' == sampleUnitPairMSet
+                   Nothing => False)
+  let zoomOk = zoomSpace (redShift 1) (zoomSpace (blackShift 1) sampleUnitPairMSet) == sampleUnitPairMSet
+  let pass = normZero && isCan && spreadOk && codecOk && zoomOk
+  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ " -> pass=" ++ show pass)
   pure pass
 ```
