@@ -107,6 +107,32 @@ public export
        e1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
    in (a1 + b1 == 57) && (e1 <= e0)) = True
 prfBoxCoreRotatePythParam7 = Refl
+
+public export
+0 prfBoxCoreRdivPosBox :
+  (Stage0.BoxInt.rdivPosBox (MkBoxInt 13) 25 == MkBoxInt 1 &&
+   Stage0.BoxInt.rdivPosBox (MkBoxInt (-13)) 25 == MkBoxInt (-1) &&
+   Stage0.BoxInt.rdivPosBox (MkBoxInt 12) 25 == MkBoxInt 0) = True
+prfBoxCoreRdivPosBox = Refl
+
+public export
+0 prfBoxCoreLaurentGreen1 :
+  (let st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+       p  = Stage0.Box.singletonBox (ZeroZ, ZeroZ) (MkBoxInt 16)
+       g  = Stage0.Box.laurentGreenSeries combine 1 4 1 st p
+   in (Stage0.Box.lookupBox (ZeroZ, ZeroZ) g == MkBoxInt 16) &&
+      (Stage0.Box.lookupBox (PosZ 0, ZeroZ) g == MkBoxInt 4) &&
+      (Stage0.Box.totalMassBox g == MkBoxInt 32)) = True
+prfBoxCoreLaurentGreen1 = Refl
+
+public export
+0 prfBoxCoreRotatePythSymmetry :
+  (let rPos = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
+       rNeg = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt (-100)) (MkBoxInt 43) (MkBoxInt (-80))
+   in (rNeg.valA == negBox rPos.valA) &&
+      (rNeg.valB == negBox rPos.valB) &&
+      (rNeg.valU == negBox rPos.valU)) = True
+prfBoxCoreRotatePythSymmetry = Refl
 ```
 
 ## 4. Dynamic Verification Suite
@@ -128,15 +154,19 @@ auditBoxCoreProof = do
   let lensOk = applyExternalLens (MkExternalLens (\m => m) (blackShift 1) zeroShift (RetroTime 1) (\m => m)) sampleUnitPairMSet
                  == zoomSpace (blackShift 1) sampleUnitPairMSet
   let tdivOk = tdivPosBox (MkBoxInt (-73)) 25 == MkBoxInt (-2) &&
+               rdivPosBox (MkBoxInt 13) 25 == MkBoxInt 1 &&
+               rdivPosBox (MkBoxInt (-13)) 25 == MkBoxInt (-1) &&
                tdiv2Box (MkBoxInt (-14)) == MkBoxInt (-7) &&
                isOddBox (MkBoxInt (-7)) &&
                not (isOddBox (MkBoxInt 24))
   let edge   = mkAntisymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
   let st4    = laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
   let conv   = convolveStencil (singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)) st4
+  let green  = laurentGreenSeries combine 1 4 1 st4 (singletonBox (ZeroZ, ZeroZ) (MkBoxInt 16))
   let r7     = rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
   let algOk  = totalMassBox edge == MkBoxInt 0 && isAntisymBox edge &&
                totalMassBox conv == MkBoxInt 20 &&
+               totalMassBox green == MkBoxInt 32 &&
                unwrapBox r7.valA + unwrapBox r7.valB == 57
   let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk && algOk
   putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ ", alg=" ++ show algOk ++ " -> pass=" ++ show pass)
