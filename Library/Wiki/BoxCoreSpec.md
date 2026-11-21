@@ -135,30 +135,35 @@ public export
 prfBoxCoreRotatePythSymmetry = Refl
 
 public export
-0 prfBoxCoreSymEdgeAndHadamard :
-  (let a  = intToSigned 1
-       b  = intToSigned 2
-       se = Stage0.Box.mkSymEdge a b (MkBoxInt 9)
-       ae = Stage0.Box.mkAntisymEdge a b (MkBoxInt 7)
-       sq = Stage0.Box.hadamardBox ae ae
-       dg = Stage0.Box.diagEmbedBox (Stage0.Box.singletonBox a (MkBoxInt 5))
-   in Stage0.Box.isSymBox se &&
-      Stage0.Box.isSymBox sq &&
-      (Stage0.Box.lookupBox (a, b) sq == MkBoxInt 49) &&
-      (Stage0.Box.lookupBox (b, a) sq == MkBoxInt 49) &&
-      Stage0.Box.isSymBox dg &&
-      (Stage0.Box.traceBox dg == MkBoxInt 5)) = True
-prfBoxCoreSymEdgeAndHadamard = Refl
-
-public export
-0 prfBoxCoreConvolvePairStencilSym :
-  (let st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-       se = Stage0.Box.mkSymEdge (ZeroZ, ZeroZ) (PosZ 0, ZeroZ) (MkBoxInt 3)
-       sp = Stage0.Box.convolvePairStencil combine se st
-   in Stage0.Box.isSymBox sp &&
-      (Stage0.Box.lookupBox ((PosZ 0, ZeroZ), (intToSigned 2, ZeroZ)) sp == MkBoxInt 3) &&
-      (Stage0.Box.totalMassBox sp == MkBoxInt 24)) = True
-prfBoxCoreConvolvePairStencilSym = Refl
+0 prfBoxCoreMaxelHalfStorage :
+  (let a  = (ZeroZ, ZeroZ)
+       b  = (PosZ 0, ZeroZ)
+       ae = Stage0.Box.singletonMaxelEdge {form = AntisymForm} b a (MkBoxInt 7)
+       sq = Stage0.Box.hadamardAntisymSquare ae
+       st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+       sp = Stage0.Box.convolveMaxelStencil combine sq st
+       dg = Stage0.Box.diagEmbedMaxel (Stage0.Box.singletonBox a (MkBoxInt 5))
+       pB = Stage0.Box.addAtKeyBox b (MkBoxInt 2) (Stage0.Box.singletonBox a (MkBoxInt 1))
+       sB = Stage0.Box.singletonBox a (MkBoxInt 1)
+       (pY, pN) = Stage0.Box.partitionBox (== a) pB
+   in (Stage0.Box.lookupMaxel b a ae == MkBoxInt 7) &&
+      (Stage0.Box.lookupMaxel a b ae == MkBoxInt (-7)) &&
+      (Stage0.Box.maxelNodeCount ae == 1) &&
+      (Stage0.Box.traceMaxel ae == MkBoxInt 0) &&
+      (Stage0.Box.transposeMaxel ae == Stage0.Box.negateMaxel ae) &&
+      (Stage0.Box.lookupMaxel a b sq == MkBoxInt 49) &&
+      (Stage0.Box.lookupMaxel b a sq == MkBoxInt 49) &&
+      (Stage0.Box.maxelNodeCount sq == 1) &&
+      (Stage0.Box.transposeMaxel sq == sq) &&
+      Stage0.Box.isSymBox (Stage0.Box.toGeneralMaxel sq).rawMaxelBox &&
+      (Stage0.Box.maxelNodeCount sp == 4) &&
+      (Stage0.Box.lookupMaxel b (intToSigned 2, ZeroZ) sp == MkBoxInt 49) &&
+      (Stage0.Box.traceMaxel dg == MkBoxInt 5) &&
+      (pY == sB) &&
+      (Stage0.Box.maskOutBox sB pB == pN) &&
+      (Stage0.Box.maskByBox pB sB == sB) &&
+      (Stage0.Box.supportBox pB == Stage0.Box.setBox b (MkBoxInt 1) sB)) = True
+prfBoxCoreMaxelHalfStorage = Refl
 ```
 
 ## 4. Dynamic Verification Suite
@@ -185,17 +190,22 @@ auditBoxCoreProof = do
                tdiv2Box (MkBoxInt (-14)) == MkBoxInt (-7) &&
                isOddBox (MkBoxInt (-7)) &&
                not (isOddBox (MkBoxInt 24))
-  let edge   = mkAntisymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
-  let symE   = mkSymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
-  let sqE    = hadamardBox edge edge
+  let a      = (ZeroZ, ZeroZ)
+  let b      = (PosZ 0, ZeroZ)
+  let edge   = mkAntisymEdge a b (MkBoxInt 9)
+  let ae     = singletonMaxelEdge {form = AntisymForm} b a (MkBoxInt 7)
+  let sq     = hadamardAntisymSquare ae
   let st4    = laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-  let spE    = convolvePairStencil combine (mkSymEdge (ZeroZ, ZeroZ) (PosZ 0, ZeroZ) (MkBoxInt 3)) st4
+  let sp     = convolveMaxelStencil combine sq st4
   let conv   = convolveStencil (singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)) st4
   let green  = laurentGreenSeries combine 1 4 1 st4 (singletonBox (ZeroZ, ZeroZ) (MkBoxInt 16))
   let r7     = rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
   let algOk  = totalMassBox edge == MkBoxInt 0 && isAntisymBox edge &&
-               isSymBox symE && isSymBox sqE && isSymBox spE &&
-               totalMassBox spE == MkBoxInt 24 &&
+               lookupMaxel b a ae == MkBoxInt 7 && lookupMaxel a b ae == MkBoxInt (-7) &&
+               lookupMaxel a b sq == MkBoxInt 49 && lookupMaxel b a sq == MkBoxInt 49 &&
+               maxelNodeCount ae == 1 && maxelNodeCount sp == 4 &&
+               lookupMaxel b (intToSigned 2, ZeroZ) sp == MkBoxInt 49 &&
+               isSymBox (toGeneralMaxel sq).rawMaxelBox &&
                totalMassBox conv == MkBoxInt 20 &&
                totalMassBox green == MkBoxInt 32 &&
                unwrapBox r7.valA + unwrapBox r7.valB == 57
