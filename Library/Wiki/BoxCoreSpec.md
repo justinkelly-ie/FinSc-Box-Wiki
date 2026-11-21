@@ -138,13 +138,19 @@ public export
 0 prfBoxCoreMaxelHalfStorage :
   (let a  = (ZeroZ, ZeroZ)
        b  = (PosZ 0, ZeroZ)
+       c  = (ZeroZ, PosZ 0)
        ae = Stage0.Box.singletonMaxelEdge {form = AntisymForm} b a (MkBoxInt 7)
-       sq = Stage0.Box.hadamardAntisymSquare ae
+       sq = ae .*. ae
        st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
        sp = Stage0.Box.convolveMaxelStencil combine sq st
        dg = Stage0.Box.diagEmbedMaxel (Stage0.Box.singletonBox a (MkBoxInt 5))
+       sy = Stage0.Box.addMaxel dg (Stage0.Box.singletonMaxelEdge b a (MkBoxInt 3))
+       syA = sy .*. ae
+       gn  = Stage0.Box.toGeneralMaxel sy .*. ae
        pB = Stage0.Box.addAtKeyBox b (MkBoxInt 2) (Stage0.Box.singletonBox a (MkBoxInt 1))
        sB = Stage0.Box.singletonBox a (MkBoxInt 1)
+       bx = Stage0.Box.singletonBox b (MkBoxInt 4)
+       hm = Stage0.HereditaryMSet.scalarKeyHMSet 3
        (pY, pN) = Stage0.Box.partitionBox (== a) pB
    in (Stage0.Box.lookupMaxel b a ae == MkBoxInt 7) &&
       (Stage0.Box.lookupMaxel a b ae == MkBoxInt (-7)) &&
@@ -159,6 +165,18 @@ public export
       (Stage0.Box.maxelNodeCount sp == 4) &&
       (Stage0.Box.lookupMaxel b (intToSigned 2, ZeroZ) sp == MkBoxInt 49) &&
       (Stage0.Box.traceMaxel dg == MkBoxInt 5) &&
+      ((sy <.> sy) == (Stage0.Box.toGeneralMaxel sy <.> Stage0.Box.toGeneralMaxel sy)) &&
+      ((ae <.> ae) == (Stage0.Box.toGeneralMaxel ae <.> Stage0.Box.toGeneralMaxel ae)) &&
+      (Stage0.Box.toGeneralMaxel syA == gn) &&
+      (Stage0.Box.lookupMaxel b a syA == MkBoxInt 21) &&
+      (Stage0.Box.lookupMaxel a b syA == MkBoxInt (-21)) &&
+      ((Stage0.Interfaces.scaleM (MkBoxInt 2) sy <.> sy) == MkBoxInt 86) &&
+      ((Stage0.Interfaces.subM sy sy == Stage0.Interfaces.zeroM)) &&
+      ((Stage0.Interfaces.addM bx (Stage0.Interfaces.negM bx) == Stage0.Interfaces.zeroM)) &&
+      ((bx <.> bx) == MkBoxInt 16) &&
+      ((hm <.> hm) == MkBoxInt 9) &&
+      (Stage0.Interfaces.subM (Stage0.Interfaces.addM hm hm) hm == hm) &&
+      ((sy <.> Stage0.Box.singletonMaxelEdge c a (MkBoxInt 1)) == MkBoxInt 0) &&
       (pY == sB) &&
       (Stage0.Box.maskOutBox sB pB == pN) &&
       (Stage0.Box.maskByBox pB sB == sB) &&
@@ -194,7 +212,9 @@ auditBoxCoreProof = do
   let b      = (PosZ 0, ZeroZ)
   let edge   = mkAntisymEdge a b (MkBoxInt 9)
   let ae     = singletonMaxelEdge {form = AntisymForm} b a (MkBoxInt 7)
-  let sq     = hadamardAntisymSquare ae
+  let sq     = ae .*. ae
+  let sy     = addM (diagEmbedMaxel (singletonBox a (MkBoxInt 5))) (singletonMaxelEdge b a (MkBoxInt 3))
+  let syA    = sy .*. ae
   let st4    = laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
   let sp     = convolveMaxelStencil combine sq st4
   let conv   = convolveStencil (singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)) st4
@@ -203,6 +223,9 @@ auditBoxCoreProof = do
   let algOk  = totalMassBox edge == MkBoxInt 0 && isAntisymBox edge &&
                lookupMaxel b a ae == MkBoxInt 7 && lookupMaxel a b ae == MkBoxInt (-7) &&
                lookupMaxel a b sq == MkBoxInt 49 && lookupMaxel b a sq == MkBoxInt 49 &&
+               (sy <.> sy) == (toGeneralMaxel sy <.> toGeneralMaxel sy) &&
+               (ae <.> ae) == (toGeneralMaxel ae <.> toGeneralMaxel ae) &&
+               toGeneralMaxel syA == (toGeneralMaxel sy .*. ae) &&
                maxelNodeCount ae == 1 && maxelNodeCount sp == 4 &&
                lookupMaxel b (intToSigned 2, ZeroZ) sp == MkBoxInt 49 &&
                isSymBox (toGeneralMaxel sq).rawMaxelBox &&
