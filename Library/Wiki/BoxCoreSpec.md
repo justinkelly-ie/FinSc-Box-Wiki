@@ -70,6 +70,14 @@ public export
     Stage1.BlackRedZoom.sampleUnitPairMSet
   = zoomSpace (blackShift 1) Stage1.BlackRedZoom.sampleUnitPairMSet
 prfBoxCoreExternalLensNonPerturbing = prfExternalLensSpaceZoomMatches
+
+public export
+0 prfBoxCoreTdivPosAndOdd :
+  (Stage0.BoxInt.tdivPosBox (MkBoxInt (-73)) 25 == MkBoxInt (-2) &&
+   Stage0.BoxInt.tdiv2Box (MkBoxInt (-14)) == MkBoxInt (-7) &&
+   Stage0.BoxInt.isOddBox (MkBoxInt (-7)) &&
+   not (Stage0.BoxInt.isOddBox (MkBoxInt 24))) = True
+prfBoxCoreTdivPosAndOdd = Refl
 ```
 
 ## 4. Dynamic Verification Suite
@@ -90,7 +98,11 @@ auditBoxCoreProof = do
   let zoomOk = zoomSpace (redShift 1) (zoomSpace (blackShift 1) sampleUnitPairMSet) == sampleUnitPairMSet
   let lensOk = applyExternalLens (MkExternalLens (\m => m) (blackShift 1) zeroShift (RetroTime 1) (\m => m)) sampleUnitPairMSet
                  == zoomSpace (blackShift 1) sampleUnitPairMSet
-  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk
-  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ " -> pass=" ++ show pass)
+  let tdivOk = tdivPosBox (MkBoxInt (-73)) 25 == MkBoxInt (-2) &&
+               tdiv2Box (MkBoxInt (-14)) == MkBoxInt (-7) &&
+               isOddBox (MkBoxInt (-7)) &&
+               not (isOddBox (MkBoxInt 24))
+  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk
+  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ " -> pass=" ++ show pass)
   pure pass
 ```
