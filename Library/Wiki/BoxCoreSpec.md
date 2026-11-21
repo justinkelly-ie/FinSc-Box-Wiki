@@ -62,6 +62,14 @@ public export
   (zoomSpace (redShift 1) (zoomSpace (blackShift 1) Stage1.BlackRedZoom.sampleUnitPairMSet)
    == Stage1.BlackRedZoom.sampleUnitPairMSet) = True
 prfBoxCoreZoomSpaceRoundTrip = Refl
+
+public export
+0 prfBoxCoreExternalLensNonPerturbing :
+  Stage1.Lenses.applyExternalLens
+    (MkExternalLens (\m => m) (blackShift 1) Stage1.BlackRedZoom.zeroShift (RetroTime 1) (\m => m))
+    Stage1.BlackRedZoom.sampleUnitPairMSet
+  = zoomSpace (blackShift 1) Stage1.BlackRedZoom.sampleUnitPairMSet
+prfBoxCoreExternalLensNonPerturbing = prfExternalLensSpaceZoomMatches
 ```
 
 ## 4. Dynamic Verification Suite
@@ -80,7 +88,9 @@ auditBoxCoreProof = do
                    Just m' => m' == sampleUnitPairMSet
                    Nothing => False)
   let zoomOk = zoomSpace (redShift 1) (zoomSpace (blackShift 1) sampleUnitPairMSet) == sampleUnitPairMSet
-  let pass = normZero && isCan && spreadOk && codecOk && zoomOk
-  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ " -> pass=" ++ show pass)
+  let lensOk = applyExternalLens (MkExternalLens (\m => m) (blackShift 1) zeroShift (RetroTime 1) (\m => m)) sampleUnitPairMSet
+                 == zoomSpace (blackShift 1) sampleUnitPairMSet
+  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk
+  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ " -> pass=" ++ show pass)
   pure pass
 ```
