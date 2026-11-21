@@ -78,6 +78,35 @@ public export
    Stage0.BoxInt.isOddBox (MkBoxInt (-7)) &&
    not (Stage0.BoxInt.isOddBox (MkBoxInt 24))) = True
 prfBoxCoreTdivPosAndOdd = Refl
+
+public export
+0 prfBoxCoreAntisymEdgeZeroSum :
+  (let e = Stage0.Box.mkAntisymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
+   in (Stage0.Box.totalMassBox e == MkBoxInt 0) && Stage0.Box.isAntisymBox e) = True
+prfBoxCoreAntisymEdgeZeroSum = Refl
+
+public export
+0 prfBoxCoreLaurentStencil4 :
+  (let st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+       p  = Stage0.Box.singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)
+       c  = Stage0.Box.convolveStencil p st
+   in (Stage0.Box.lookupBox (intToSigned 4, intToSigned (-2)) c == MkBoxInt 5) &&
+      (Stage0.Box.lookupBox (intToSigned 2, intToSigned (-2)) c == MkBoxInt 5) &&
+      (Stage0.Box.lookupBox (intToSigned 3, intToSigned (-1)) c == MkBoxInt 5) &&
+      (Stage0.Box.lookupBox (intToSigned 3, intToSigned (-3)) c == MkBoxInt 5) &&
+      (Stage0.Box.totalMassBox c == MkBoxInt 20)) = True
+prfBoxCoreLaurentStencil4 = Refl
+
+public export
+0 prfBoxCoreRotatePythParam7 :
+  (let r  = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
+       a1 = unwrapBox r.valA
+       b1 = unwrapBox r.valB
+       u1 = unwrapBox r.valU
+       e0 = 2 * (100 * 100 + (-43) * (-43)) + 80 * 80
+       e1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
+   in (a1 + b1 == 57) && (e1 <= e0)) = True
+prfBoxCoreRotatePythParam7 = Refl
 ```
 
 ## 4. Dynamic Verification Suite
@@ -102,7 +131,14 @@ auditBoxCoreProof = do
                tdiv2Box (MkBoxInt (-14)) == MkBoxInt (-7) &&
                isOddBox (MkBoxInt (-7)) &&
                not (isOddBox (MkBoxInt 24))
-  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk
-  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ " -> pass=" ++ show pass)
+  let edge   = mkAntisymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
+  let st4    = laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+  let conv   = convolveStencil (singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)) st4
+  let r7     = rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
+  let algOk  = totalMassBox edge == MkBoxInt 0 && isAntisymBox edge &&
+               totalMassBox conv == MkBoxInt 20 &&
+               unwrapBox r7.valA + unwrapBox r7.valB == 57
+  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk && algOk
+  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ ", alg=" ++ show algOk ++ " -> pass=" ++ show pass)
   pure pass
 ```
