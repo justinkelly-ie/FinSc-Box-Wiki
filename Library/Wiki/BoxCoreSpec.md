@@ -133,6 +133,32 @@ public export
       (rNeg.valB == negBox rPos.valB) &&
       (rNeg.valU == negBox rPos.valU)) = True
 prfBoxCoreRotatePythSymmetry = Refl
+
+public export
+0 prfBoxCoreSymEdgeAndHadamard :
+  (let a  = intToSigned 1
+       b  = intToSigned 2
+       se = Stage0.Box.mkSymEdge a b (MkBoxInt 9)
+       ae = Stage0.Box.mkAntisymEdge a b (MkBoxInt 7)
+       sq = Stage0.Box.hadamardBox ae ae
+       dg = Stage0.Box.diagEmbedBox (Stage0.Box.singletonBox a (MkBoxInt 5))
+   in Stage0.Box.isSymBox se &&
+      Stage0.Box.isSymBox sq &&
+      (Stage0.Box.lookupBox (a, b) sq == MkBoxInt 49) &&
+      (Stage0.Box.lookupBox (b, a) sq == MkBoxInt 49) &&
+      Stage0.Box.isSymBox dg &&
+      (Stage0.Box.traceBox dg == MkBoxInt 5)) = True
+prfBoxCoreSymEdgeAndHadamard = Refl
+
+public export
+0 prfBoxCoreConvolvePairStencilSym :
+  (let st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+       se = Stage0.Box.mkSymEdge (ZeroZ, ZeroZ) (PosZ 0, ZeroZ) (MkBoxInt 3)
+       sp = Stage0.Box.convolvePairStencil combine se st
+   in Stage0.Box.isSymBox sp &&
+      (Stage0.Box.lookupBox ((PosZ 0, ZeroZ), (intToSigned 2, ZeroZ)) sp == MkBoxInt 3) &&
+      (Stage0.Box.totalMassBox sp == MkBoxInt 24)) = True
+prfBoxCoreConvolvePairStencilSym = Refl
 ```
 
 ## 4. Dynamic Verification Suite
@@ -160,11 +186,16 @@ auditBoxCoreProof = do
                isOddBox (MkBoxInt (-7)) &&
                not (isOddBox (MkBoxInt 24))
   let edge   = mkAntisymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
+  let symE   = mkSymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
+  let sqE    = hadamardBox edge edge
   let st4    = laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+  let spE    = convolvePairStencil combine (mkSymEdge (ZeroZ, ZeroZ) (PosZ 0, ZeroZ) (MkBoxInt 3)) st4
   let conv   = convolveStencil (singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)) st4
   let green  = laurentGreenSeries combine 1 4 1 st4 (singletonBox (ZeroZ, ZeroZ) (MkBoxInt 16))
   let r7     = rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
   let algOk  = totalMassBox edge == MkBoxInt 0 && isAntisymBox edge &&
+               isSymBox symE && isSymBox sqE && isSymBox spE &&
+               totalMassBox spE == MkBoxInt 24 &&
                totalMassBox conv == MkBoxInt 20 &&
                totalMassBox green == MkBoxInt 32 &&
                unwrapBox r7.valA + unwrapBox r7.valB == 57
