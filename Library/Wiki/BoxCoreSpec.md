@@ -278,4 +278,17 @@ public export
       (Stage0.HereditaryMSet.spreadZHMSet 2) ==
       Stage0.HereditaryMSet.spreadZHMSet 4)) = True
 prfBoxCoreGohSpreadPolyAlgebra = Refl
+
+public export
+0 prfMSetSupportIdempotent :
+  let z2 = Stage0.HereditaryMSet.spreadZHMSet 2
+      s2 = Stage0.HereditaryMSet.MSetSupport z2
+      px = Stage0.HereditaryMSet.polyX
+  in ((Stage0.HereditaryMSet.MSetSupport Stage0.HereditaryMSet.emptyPureMSet ==
+         Stage0.HereditaryMSet.emptyPureMSet) &&
+      (Stage0.HereditaryMSet.MSetSupport s2 == s2) &&
+      (Stage0.HereditaryMSet.MSetSupport (Stage0.HereditaryMSet.negHMSet z2) == s2) &&
+      (Stage0.HereditaryMSet.MSetSupport (3 * px - 5 * px * px) ==
+         Stage0.HereditaryMSet.MSetSupport (px + px * px))) = True
+prfMSetSupportIdempotent = Refl
 ```
