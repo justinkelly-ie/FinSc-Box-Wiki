@@ -203,6 +203,29 @@ public export
       (Stage0.Box.maskByBox pB sB == sB) &&
       (Stage0.Box.supportBox pB == Stage0.Box.setBox b (MkBoxInt 1) sB)) = True
 prfBoxCoreMaxelHalfStorage = Refl
+
+public export
+runPaceCycle : Nat -> Integer -> Integer -> BoxInt -> (Nat, Nat, BoxInt)
+runPaceCycle n budget load initBal = go n initBal 0 0
+  where
+    go : Nat -> BoxInt -> Nat -> Nat -> (Nat, Nat, BoxInt)
+    go Z bal y s = (y, s, bal)
+    go (S k) bal y s =
+      case paceStreamStep budget load bal of
+        (StreamYield (), nxt) => go k nxt (S y) s
+        (StreamSkip,     nxt) => go k nxt y (S s)
+        (StreamDone,     nxt) => go k nxt y s
+
+public export
+0 prfBoxCorePaceStreamLaws :
+  (paceStreamStep 7 0 (MkBoxInt 0) == (StreamYield (), MkBoxInt 0) &&
+   paceStreamStep 0 99 (MkBoxInt 5) == (StreamYield (), MkBoxInt 0) &&
+   fst (paceStreamStep 2 3 (MkBoxInt 0)) == StreamSkip &&
+   runPaceCycle 5 2 3 (MkBoxInt 0) == (2, 3, MkBoxInt 0) &&
+   runPaceCycle 5 3 2 (MkBoxInt 0) == (3, 2, MkBoxInt 0) &&
+   runPaceCycle 8 7 1 (MkBoxInt 0) == (7, 1, MkBoxInt 0) &&
+   paceStreamStep 4 0 (MkBoxInt (-9)) == (StreamYield (), MkBoxInt 0)) = True
+prfBoxCorePaceStreamLaws = Refl
 ```
 
 ## 4. Dynamic Verification Suite
@@ -260,7 +283,14 @@ auditBoxCoreProof = do
                totalMassBox conv == MkBoxInt 20 &&
                totalMassBox green == MkBoxInt 32 &&
                unwrapBox r7.valA + unwrapBox r7.valB == 57
-  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk && algOk
-  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ ", alg=" ++ show algOk ++ " -> pass=" ++ show pass)
+  let paceOk = paceStreamStep 7 0 (MkBoxInt 0) == (StreamYield (), MkBoxInt 0) &&
+               paceStreamStep 0 99 (MkBoxInt 5) == (StreamYield (), MkBoxInt 0) &&
+               fst (paceStreamStep 2 3 (MkBoxInt 0)) == StreamSkip &&
+               runPaceCycle 5 2 3 (MkBoxInt 0) == (2, 3, MkBoxInt 0) &&
+               runPaceCycle 5 3 2 (MkBoxInt 0) == (3, 2, MkBoxInt 0) &&
+               runPaceCycle 8 7 1 (MkBoxInt 0) == (7, 1, MkBoxInt 0) &&
+               paceStreamStep 4 0 (MkBoxInt (-9)) == (StreamYield (), MkBoxInt 0)
+  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk && algOk && paceOk
+  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ ", alg=" ++ show algOk ++ ", pace=" ++ show paceOk ++ " -> pass=" ++ show pass)
   pure pass
 ```
