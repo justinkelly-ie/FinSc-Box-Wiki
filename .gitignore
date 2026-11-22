@@ -1,1 +1,7 @@
+# Idris 2 build artifacts
 build/
+**/*.ttc
+**/*.ttm
+**/*.ibc
+**/*.ss
+**/*.so
