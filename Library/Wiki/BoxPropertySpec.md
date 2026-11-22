@@ -88,6 +88,21 @@ prop_blackRedZoomRoundTrip n =
      (zoomSpace (redShift k) (zoomSpace (blackShift k) sampleUnitPairMSet) == sampleUnitPairMSet)
 ```
 
+### Property 6: Homogenized PureMultiset Spread Polynomial Matches Exact Pythagorean Powers
+For any generator $m \ge 2$ and power $y \in \{1..4\}$, the $y$-th Pythagorean triple $(A_y, B_y, R_y) = (A_1 + i B_1)^y$ satisfies $A_y^2 + B_y^2 = R_y^2$ and $R_1^{2y} Z_y(4 B_1^2 / R_1^2) = 4 B_y^2$:
+
+```idris
+public export
+prop_spreadPolyPythPower : Integer -> Nat -> Bool
+prop_spreadPolyPythPower mRaw n =
+  let y            = S (mod5 n)
+      m            = MkBoxInt (if mRaw < 0 then 2 - mRaw else 2 + mRaw)
+      (_, b1, r1)  = pythPowerTriple 1 m
+      (ay, by, ry) = pythPowerTriple y m
+  in (ay * ay + by * by == ry * ry) &&
+     (evalHomogPolyHMSet y (spreadZHMSet y) (4 * b1 * b1) (r1 * r1) == 4 * by * by)
+```
+
 ## 2. Dynamic Execution Suite
 
 ```idris
@@ -100,11 +115,13 @@ auditBoxProperties = do
   let r3 = qc3 prop_groverInvolutionScaled
   let r4 = qc prop_codecScalarRoundTrip
   let r5 = qc prop_blackRedZoomRoundTrip
+  let r6 = qc2 prop_spreadPolyPythPower
   let pass = (r1.pass == Just True) &&
              (r2.pass == Just True) &&
              (r3.pass == Just True) &&
              (r4.pass == Just True) &&
-             (r5.pass == Just True)
-  putStrLn ("  - NegCancel, CrossOrthogonal, GroverInvolution, CodecRoundTrip, BlackRedZoom (100 tests each) -> pass=" ++ show pass)
+             (r5.pass == Just True) &&
+             (r6.pass == Just True)
+  putStrLn ("  - NegCancel, CrossOrthogonal, GroverInvolution, CodecRoundTrip, BlackRedZoom, SpreadPolyPythPower (100 tests each) -> pass=" ++ show pass)
   pure pass
 ```

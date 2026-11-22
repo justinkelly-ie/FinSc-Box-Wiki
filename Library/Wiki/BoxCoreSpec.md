@@ -266,4 +266,16 @@ public export
    runPaceCycle 8 7 1 (MkBoxInt 0) == (7, 1, MkBoxInt 0) &&
    paceStreamStep 4 0 (MkBoxInt (-9)) == (StreamYield (), MkBoxInt 0)) = True
 prfBoxCorePaceStreamLaws = Refl
+
+public export
+0 prfBoxCoreGohSpreadPolyAlgebra :
+  ((Stage0.HereditaryMSet.spreadZHMSet 4 ==
+      Stage0.HereditaryMSet.gohPsi1 *
+      Stage0.HereditaryMSet.gohPsi2 *
+      Stage0.HereditaryMSet.gohPsi4) &&
+   (Stage0.HereditaryMSet.evalPolyHMSetAt
+      (Stage0.HereditaryMSet.spreadZHMSet 2)
+      (Stage0.HereditaryMSet.spreadZHMSet 2) ==
+      Stage0.HereditaryMSet.spreadZHMSet 4)) = True
+prfBoxCoreGohSpreadPolyAlgebra = Refl
 ```
