@@ -233,7 +233,7 @@ public export
   (let uM  = FinScBox.Box.unitAxes2DWith negHMSet (FinScBox.HereditaryMSet.scalarKeyHMSet 1) (FinScBox.HereditaryMSet.scalarKeyHMSet 2)
        sd1 = FinScBox.Box.addAtKeyBox ZeroZ (MkBoxInt 3) (FinScBox.Box.singletonBox (PosZ 0) (MkBoxInt (-2)))
        sd2 = FinScBox.Box.addAtKeyBox ZeroZ (MkBoxInt 3) (FinScBox.Box.singletonBox (NegZ 0) (MkBoxInt 4))
-       sd  = FinScBox.Multiset.symmetricDiffMSet sd1 sd2
+       sd  = FinScBox.Box.symmetricDiffMSet sd1 sd2
        ch  = FinScBox.Views.splitChannels FinScBox.BlackRedZoom.sampleUnitPairMSet
        out = FinScBox.HereditaryMSet.outerHMSet (FinScBox.HereditaryMSet.scalarKeyHMSet 2) (FinScBox.HereditaryMSet.scalarKeyHMSet 3)
    in (FinScBox.Box.totalMassBox uM == MkBoxInt 4) &&
