@@ -86,16 +86,16 @@ public export
 prfBoxCoreAntisymEdgeZeroSum = Refl
 
 public export
-0 prfBoxCoreLaurentStencil4 :
-  (let st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+0 prfBoxCoreUnitAxes2D :
+  (let st = Stage0.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
        p  = Stage0.Box.singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)
-       c  = Stage0.Box.convolveStencil p st
+       c  = Stage0.Box.mulBoxWith p st
    in (Stage0.Box.lookupBox (intToSigned 4, intToSigned (-2)) c == MkBoxInt 5) &&
       (Stage0.Box.lookupBox (intToSigned 2, intToSigned (-2)) c == MkBoxInt 5) &&
       (Stage0.Box.lookupBox (intToSigned 3, intToSigned (-1)) c == MkBoxInt 5) &&
       (Stage0.Box.lookupBox (intToSigned 3, intToSigned (-3)) c == MkBoxInt 5) &&
       (Stage0.Box.totalMassBox c == MkBoxInt 20)) = True
-prfBoxCoreLaurentStencil4 = Refl
+prfBoxCoreUnitAxes2D = Refl
 
 public export
 0 prfBoxCoreRotatePythParam7 :
@@ -117,7 +117,7 @@ prfBoxCoreRdivPosBox = Refl
 
 public export
 0 prfBoxCoreLaurentGreen1 :
-  (let st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+  (let st = Stage0.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
        p  = Stage0.Box.singletonBox (ZeroZ, ZeroZ) (MkBoxInt 16)
        g  = Stage0.Box.laurentGreenSeries combine 1 4 1 st p
    in (Stage0.Box.lookupBox (ZeroZ, ZeroZ) g == MkBoxInt 16) &&
@@ -141,8 +141,8 @@ public export
        c  = (ZeroZ, PosZ 0)
        ae = Stage0.Box.singletonMaxelEdge {form = AntisymForm} b a (MkBoxInt 7)
        sq = ae .*. ae
-       st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-       sp = Stage0.Box.convolveMaxelStencil combine sq st
+       st = Stage0.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+       sp = Stage0.Box.shiftConvolveMaxel combine sq st
        dg = Stage0.Box.diagEmbedMaxel (Stage0.Box.singletonBox a (MkBoxInt 5))
        sy = Stage0.Box.addMaxel dg (Stage0.Box.singletonMaxelEdge b a (MkBoxInt 3))
        syA = sy .*. ae
@@ -150,7 +150,7 @@ public export
        da  = Stage0.Box.addMaxel
                (Stage0.Box.singletonMaxelEdge {form = DiagAntisymForm} a a (MkBoxInt 5))
                (Stage0.Box.singletonMaxelEdge b a (MkBoxInt 7))
-       daSt = Stage0.Box.convolveMaxelStencil combine da st
+       daSt = Stage0.Box.shiftConvolveMaxel combine da st
        pB = Stage0.Box.addAtKeyBox b (MkBoxInt 2) (Stage0.Box.singletonBox a (MkBoxInt 1))
        sB = Stage0.Box.singletonBox a (MkBoxInt 1)
        bx = Stage0.Box.singletonBox b (MkBoxInt 4)
@@ -203,6 +203,22 @@ public export
       (Stage0.Box.maskByBox pB sB == sB) &&
       (Stage0.Box.supportBox pB == Stage0.Box.setBox b (MkBoxInt 1) sB)) = True
 prfBoxCoreMaxelHalfStorage = Refl
+
+public export
+0 prfBoxCoreConsolidatedAlgebra :
+  (let uM  = Stage0.Box.unitAxes2DWith negHMSet (Stage0.HereditaryMSet.scalarKeyHMSet 1) (Stage0.HereditaryMSet.scalarKeyHMSet 2)
+       sd1 = Stage0.Box.addAtKeyBox ZeroZ (MkBoxInt 3) (Stage0.Box.singletonBox (PosZ 0) (MkBoxInt (-2)))
+       sd2 = Stage0.Box.addAtKeyBox ZeroZ (MkBoxInt 3) (Stage0.Box.singletonBox (NegZ 0) (MkBoxInt 4))
+       sd  = Stage0.Multiset.symmetricDiffMSet sd1 sd2
+       ch  = Stage1.Views.splitChannels Stage1.BlackRedZoom.sampleUnitPairMSet
+       out = Stage0.HereditaryMSet.outerHMSet (Stage0.HereditaryMSet.scalarKeyHMSet 2) (Stage0.HereditaryMSet.scalarKeyHMSet 3)
+   in (Stage0.Box.totalMassBox uM == MkBoxInt 4) &&
+      (Stage0.Box.totalMassBox sd == MkBoxInt 6) &&
+      (Stage0.Box.lookupBox ZeroZ sd == MkBoxInt 0) &&
+      Stage1.Views.disjointDualSupports ch &&
+      (Stage1.Views.interactChannels ch == Stage1.BlackRedZoom.sampleUnitPairMSet) &&
+      (Stage0.HereditaryMSet.sumHMSet out == MkBoxInt 6)) = True
+prfBoxCoreConsolidatedAlgebra = Refl
 
 public export
 runPaceCycle : Nat -> Integer -> Integer -> BoxInt -> (Nat, Nat, BoxInt)
@@ -261,9 +277,9 @@ auditBoxCoreProof = do
   let syA    = sy .*. ae
   let da     = addM (singletonMaxelEdge {form = DiagAntisymForm} a a (MkBoxInt 5))
                     (singletonMaxelEdge b a (MkBoxInt 7))
-  let st4    = laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-  let sp     = convolveMaxelStencil combine sq st4
-  let conv   = convolveStencil (singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)) st4
+  let st4    = unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+  let sp     = shiftConvolveMaxel combine sq st4
+  let conv   = mulBoxWith (singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)) st4
   let green  = laurentGreenSeries combine 1 4 1 st4 (singletonBox (ZeroZ, ZeroZ) (MkBoxInt 16))
   let r7     = rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
   let algOk  = totalMassBox edge == MkBoxInt 0 && isAntisymBox edge &&
@@ -282,7 +298,8 @@ auditBoxCoreProof = do
                isSymBox (toGeneralMaxel sq).rawMaxelBox &&
                totalMassBox conv == MkBoxInt 20 &&
                totalMassBox green == MkBoxInt 32 &&
-               unwrapBox r7.valA + unwrapBox r7.valB == 57
+               unwrapBox r7.valA + unwrapBox r7.valB == 57 &&
+               totalMassBox (symmetricDiffMSet (singletonBox a (MkBoxInt 3)) (singletonBox b (MkBoxInt 4))) == MkBoxInt 7
   let paceOk = paceStreamStep 7 0 (MkBoxInt 0) == (StreamYield (), MkBoxInt 0) &&
                paceStreamStep 0 99 (MkBoxInt 5) == (StreamYield (), MkBoxInt 0) &&
                fst (paceStreamStep 2 3 (MkBoxInt 0)) == StreamSkip &&
