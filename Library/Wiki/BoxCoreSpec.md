@@ -80,6 +80,30 @@ public export
 prfBoxCoreTdivPosAndOdd = Refl
 
 public export
+checkEuclidCase : Integer -> Integer -> Integer -> Integer -> Bool
+checkEuclidCase a b q r =
+  (Stage0.BoxInt.divBox (MkBoxInt a) (MkBoxInt b) == MkBoxInt q) &&
+  (Stage0.BoxInt.modBox (MkBoxInt a) (MkBoxInt b) == MkBoxInt r)
+
+public export
+0 prfBoxCoreEuclidDivMod :
+  (checkEuclidCase 7 3 2 1 &&
+   checkEuclidCase (-7) 3 (-3) 2 &&
+   checkEuclidCase 7 (-3) (-2) 1 &&
+   checkEuclidCase (-7) (-3) 3 2 &&
+   checkEuclidCase (-6) 3 (-2) 0 &&
+   checkEuclidCase 6 (-3) (-2) 0 &&
+   checkEuclidCase (-6) (-3) 2 0 &&
+   checkEuclidCase 7 0 0 0) = True
+prfBoxCoreEuclidDivMod = Refl
+
+public export
+0 prfBoxCoreIntegralDivMod :
+  (div (MkBoxInt (-7)) (MkBoxInt 3), mod (MkBoxInt (-7)) (MkBoxInt 3))
+  = (MkBoxInt (-3), MkBoxInt 2)
+prfBoxCoreIntegralDivMod = Refl
+
+public export
 0 prfBoxCoreAntisymEdgeZeroSum :
   (let e = Stage0.Box.mkAntisymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
    in (Stage0.Box.totalMassBox e == MkBoxInt 0) && Stage0.Box.isAntisymBox e) = True
@@ -268,6 +292,9 @@ auditBoxCoreProof = do
                tdiv2Box (MkBoxInt (-14)) == MkBoxInt (-7) &&
                isOddBox (MkBoxInt (-7)) &&
                not (isOddBox (MkBoxInt 24))
+  let divModOk = (div (MkBoxInt (-7)) (MkBoxInt 3) == MkBoxInt (-3)) &&
+                 (mod (MkBoxInt (-7)) (MkBoxInt 3) == MkBoxInt 2) &&
+                 (divBox (MkBoxInt 7) (MkBoxInt 0) == MkBoxInt 0)
   let a      = (ZeroZ, ZeroZ)
   let b      = (PosZ 0, ZeroZ)
   let edge   = mkAntisymEdge a b (MkBoxInt 9)
@@ -307,7 +334,7 @@ auditBoxCoreProof = do
                runPaceCycle 5 3 2 (MkBoxInt 0) == (3, 2, MkBoxInt 0) &&
                runPaceCycle 8 7 1 (MkBoxInt 0) == (7, 1, MkBoxInt 0) &&
                paceStreamStep 4 0 (MkBoxInt (-9)) == (StreamYield (), MkBoxInt 0)
-  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk && algOk && paceOk
-  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ ", alg=" ++ show algOk ++ ", pace=" ++ show paceOk ++ " -> pass=" ++ show pass)
+  let pass = normZero && isCan && spreadOk && codecOk && zoomOk && lensOk && tdivOk && divModOk && algOk && paceOk
+  putStrLn ("  - Vacuum norm=0, canonical=True, spread=3/4, codec=" ++ show codecOk ++ ", zoom=" ++ show zoomOk ++ ", lens=" ++ show lensOk ++ ", tdiv=" ++ show tdivOk ++ ", divMod=" ++ show divModOk ++ ", alg=" ++ show algOk ++ ", pace=" ++ show paceOk ++ " -> pass=" ++ show pass)
   pure pass
 ```
