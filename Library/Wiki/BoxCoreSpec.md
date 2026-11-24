@@ -65,7 +65,7 @@ prfBoxCoreZoomSpaceRoundTrip = Refl
 public export
 0 prfBoxCoreExternalLensNonPerturbing :
   FinScBox.Lenses.applyExternalLens
-    (MkExternalLens (\m => m) (blackShift 1) FinScBox.BlackRedZoom.zeroShift (RetroTime 1) (\m => m))
+    (MkExternalLens (\m => m) (blackShift 1) FinScBox.BlackRedZoom.zeroShift (\m => m))
     FinScBox.BlackRedZoom.sampleUnitPairMSet
   = zoomSpace (blackShift 1) FinScBox.BlackRedZoom.sampleUnitPairMSet
 prfBoxCoreExternalLensNonPerturbing = prfExternalLensSpaceZoomMatches
