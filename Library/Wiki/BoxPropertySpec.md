@@ -1,12 +1,11 @@
 # FinSc-Box QuickCheck Property Specification
 
 This literate specification tests invariants of **FinSc-Box** across hundreds of pseudo-randomly
-generated scalars, coordinates, and vectors.
+generated scalars, coordinates, and hereditary multisets.
 
 ```idris
 module Wiki.BoxPropertySpec
 
-import Data.Vect
 import QuickCheck
 import FinScBox
 
@@ -26,35 +25,24 @@ prop_boxIntNegCancel a =
   in (b + negate b) == intToBoxInt 0
 ```
 
-### Property 2: Cross Product Orthogonality
-The 3D cross product $u \times v$ is strictly orthogonal to $u$:
-$$(u \times v) \cdot u \equiv 0$$
+### Property 2: Conservative Quadratic Exchange Invariants
+For any state `(pA, pB, u)` and derived generator $m = 2 + |p_A + p_B| \ge 2$, `exchangeQuadratic` conserves the linear sum `pA + pB` identically and monotonically bounds `2 * (pA^2 + pB^2) + u^2`:
 
 ```idris
 public export
-prop_crossProductOrthogonal : Integer -> Integer -> Integer -> Bool
-prop_crossProductOrthogonal x y z =
-  let u = [intToBoxInt x, intToBoxInt y, intToBoxInt z]
-      v = [intToBoxInt 1, intToBoxInt 0, intToBoxInt 0]
-      w = crossProduct3 u v
-  in dotProduct3 w u == intToBoxInt 0
+prop_quadraticExchangeConserves : Integer -> Integer -> Integer -> Bool
+prop_quadraticExchangeConserves pA pB u =
+  let m  = MkBoxInt (2 + abs (pA + pB))
+      r  = exchangeQuadratic m (MkBoxInt pA) (MkBoxInt pB) (MkBoxInt u)
+      a1 = unwrapBox r.valA
+      b1 = unwrapBox r.valB
+      u1 = unwrapBox r.valU
+      q0 = 2 * (pA * pA + pB * pB) + u * u
+      q1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
+  in (a1 + b1 == pA + pB) && (q1 <= q0)
 ```
 
-### Property 3: Grover Reflection Invariance
-Applying the Grover reflection matrix $G_3$ twice yields identity scaling:
-$$G_3(G_3(v)) \equiv 9 v$$
-
-```idris
-public export
-prop_groverInvolutionScaled : Integer -> Integer -> Integer -> Bool
-prop_groverInvolutionScaled x y z =
-  let v = [intToBoxInt x, intToBoxInt y, intToBoxInt z]
-      g1 = applyGroverScaled3 v
-      g2 = applyGroverScaled3 g1
-  in g2 == [intToBoxInt (9 * x), intToBoxInt (9 * y), intToBoxInt (9 * z)]
-```
-
-### Property 4: Canonical Multiset Codec Parity & Round-Trip
+### Property 3: Canonical Multiset Codec Parity & Round-Trip
 For any signed scalar Laurent shift $n$, `renderPureMultiset` matches `Show` verbatim, passes the total `Dec` text recognizer, and parses back to the identical canonical `PureMultiset`:
 
 ```idris
@@ -70,7 +58,7 @@ prop_codecScalarRoundTrip n =
         Nothing => False)
 ```
 
-### Property 5: Black/Red Zoom Time & Space Exact Round-Trip
+### Property 4: Black/Red Zoom Time & Space Exact Round-Trip
 For bounded Black/Red shifts $k \bmod 5$, opposite shifts annihilate to `[]` and both `zoomTime` and `zoomSpace` invert cleanly back to `sampleUnitPairMSet`:
 
 ```idris
@@ -88,8 +76,8 @@ prop_blackRedZoomRoundTrip n =
      (zoomSpace (redShift k) (zoomSpace (blackShift k) sampleUnitPairMSet) == sampleUnitPairMSet)
 ```
 
-### Property 6: Homogenized PureMultiset Spread Polynomial Matches Exact Pythagorean Powers
-For any generator $m \ge 2$ and power $y \in \{1..4\}$, the $y$-th Pythagorean triple $(A_y, B_y, R_y) = (A_1 + i B_1)^y$ satisfies $A_y^2 + B_y^2 = R_y^2$ and $R_1^{2y} Z_y(4 B_1^2 / R_1^2) = 4 B_y^2$:
+### Property 5: Homogenized PureMultiset Spread Polynomial Matches Exact Pythagorean Powers
+For any generator $m \ge 2$ and power $y \in \{1..5\}$, the $y$-th Pythagorean triple $(A_y, B_y, R_y) = (A_1 + i B_1)^y$ satisfies $A_y^2 + B_y^2 = R_y^2$ and $R_1^{2y} Z_y(4 B_1^2 / R_1^2) = 4 B_y^2$:
 
 ```idris
 public export
@@ -111,17 +99,15 @@ auditBoxProperties : IO Bool
 auditBoxProperties = do
   putStrLn "  [FinSc-Box-QuickCheck] Core Properties:"
   let r1 = qc prop_boxIntNegCancel
-  let r2 = qc3 prop_crossProductOrthogonal
-  let r3 = qc3 prop_groverInvolutionScaled
-  let r4 = qc prop_codecScalarRoundTrip
-  let r5 = qc prop_blackRedZoomRoundTrip
-  let r6 = qc2 prop_spreadPolyPythPower
+  let r2 = qc3 prop_quadraticExchangeConserves
+  let r3 = qc prop_codecScalarRoundTrip
+  let r4 = qc prop_blackRedZoomRoundTrip
+  let r5 = qc2 prop_spreadPolyPythPower
   let pass = (r1.pass == Just True) &&
              (r2.pass == Just True) &&
              (r3.pass == Just True) &&
              (r4.pass == Just True) &&
-             (r5.pass == Just True) &&
-             (r6.pass == Just True)
-  putStrLn ("  - NegCancel, CrossOrthogonal, GroverInvolution, CodecRoundTrip, BlackRedZoom, SpreadPolyPythPower (100 tests each) -> pass=" ++ show pass)
+             (r5.pass == Just True)
+  putStrLn ("  - NegCancel, QuadraticExchangeConserves, CodecRoundTrip, BlackRedZoom, SpreadPolyPythPower (100 tests each) -> pass=" ++ show pass)
   pure pass
 ```

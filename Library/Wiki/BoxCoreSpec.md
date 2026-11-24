@@ -1,7 +1,7 @@
 # FinSc-Box Core Literate Specification
 
-This literate specification tests the pure, minimal, refactored foundation of **FinSc-Box**:
-the height-cached AVL tree `Box c k`, `HereditaryMSet c`, and Wildberger's rational rotations.
+This literate specification tests the pure, minimal foundation of **FinSc-Box**:
+the height-cached AVL tree `Box c k`, `HereditaryMSet c`, `Maxel` half-storage, streaming peel-work views, and conservative quadratic exchanges.
 
 ```idris
 module Wiki.BoxCoreSpec
@@ -27,8 +27,7 @@ prfBoxCoreEmptyCanonical = Refl
 
 ## 2. Wildberger Equilateral Triple Spread Invariant
 
-The 3 valence quark edges form an equilateral triangle with exact rational spread $s = 3/4$,
-satisfying Wildberger's Triple Spread Formula with zero transcendental functions:
+Three symmetric edges of equal rational spread $s = 3/4$ satisfy Wildberger's Triple Spread Formula with zero transcendental functions:
 $$(s_1 + s_2 + s_3)^2 = 2(s_1^2 + s_2^2 + s_3^2) + 4 s_1 s_2 s_3$$
 
 ```idris
@@ -40,12 +39,12 @@ public export
        rhs1 = 2 * (3 * (sNum * sNum)) * (sDen * sDen)
        rhs2 = 4 * (sNum * sNum * sNum) * sDen
    in lhs == rhs1 + rhs2) = True
-prfWikiTripleSpread = prfTripleSpreadEquilateral
+prfWikiTripleSpread = Refl
 ```
 
 ## 3. Canonical Multiset Codec & Black/Red Zoom Laws
 
-The promoted `FinScBox.MultisetCodec` and `FinScBox.BlackRedZoom` modules preserve canonical serialization parity and exact wrap/unwrap & Laurent-shift round-trips at `QTT 0`:
+The `FinScBox.MultisetCodec` and `FinScBox.BlackRedZoom` modules preserve canonical serialization parity and exact wrap/unwrap & Laurent-shift round-trips at `QTT 0`:
 
 ```idris
 public export
@@ -122,15 +121,15 @@ public export
 prfBoxCoreUnitAxes2D = Refl
 
 public export
-0 prfBoxCoreRotatePythParam7 :
-  (let r  = FinScBox.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
+0 prfBoxCoreExchangeQuadratic7 :
+  (let r  = FinScBox.QuadraticExchange.exchangeQuadratic (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
        a1 = unwrapBox r.valA
        b1 = unwrapBox r.valB
        u1 = unwrapBox r.valU
        e0 = 2 * (100 * 100 + (-43) * (-43)) + 80 * 80
        e1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
    in (a1 + b1 == 57) && (e1 <= e0)) = True
-prfBoxCoreRotatePythParam7 = Refl
+prfBoxCoreExchangeQuadratic7 = Refl
 
 public export
 0 prfBoxCoreRdivPosBox :
@@ -150,13 +149,13 @@ public export
 prfBoxCoreLaurentGreen1 = Refl
 
 public export
-0 prfBoxCoreRotatePythSymmetry :
-  (let rPos = FinScBox.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
-       rNeg = FinScBox.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt (-100)) (MkBoxInt 43) (MkBoxInt (-80))
+0 prfBoxCoreExchangeQuadraticSymmetry :
+  (let rPos = FinScBox.QuadraticExchange.exchangeQuadratic (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
+       rNeg = FinScBox.QuadraticExchange.exchangeQuadratic (MkBoxInt 7) (MkBoxInt (-100)) (MkBoxInt 43) (MkBoxInt (-80))
    in (rNeg.valA == negBox rPos.valA) &&
       (rNeg.valB == negBox rPos.valB) &&
       (rNeg.valU == negBox rPos.valU)) = True
-prfBoxCoreRotatePythSymmetry = Refl
+prfBoxCoreExchangeQuadraticSymmetry = Refl
 
 public export
 0 prfBoxCoreMaxelHalfStorage :
@@ -291,4 +290,16 @@ public export
       (FinScBox.HereditaryMSet.MSetSupport (3 * px - 5 * px * px) ==
          FinScBox.HereditaryMSet.MSetSupport (px + px * px))) = True
 prfMSetSupportIdempotent = Refl
-```
+
+public export
+0 prfStreamPeelWorkLaws :
+  (let k1  = FinScBox.HereditaryMSet.scalarKeyHMSet 1
+       nk1 = FinScBox.HereditaryMSet.negHMSet k1
+       smp = FinScBox.BlackRedZoom.sampleUnitPairMSet
+   in (FinScBox.Views.streamPeelWorkHMSet FinScBox.HereditaryMSet.emptyPureMSet ==
+         MkStreamWorkReport 0 0 0) &&
+      (FinScBox.Views.fastPeelWorkHMSet smp ==
+         (FinScBox.Views.streamPeelWorkHMSet smp).workSteps) &&
+      (snd (FinScBox.Views.streamMergeWorkHMSet k1 nk1) ==
+         MkStreamWorkReport 2 1 0)) = True
+prfStreamPeelWorkLaws = Refl
