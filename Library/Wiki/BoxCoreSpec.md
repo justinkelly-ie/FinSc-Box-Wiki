@@ -17,7 +17,7 @@ The empty vacuum multiset is identically canonical and norm zero:
 
 ```idris
 public export
-0 prfBoxCoreEmptyNormZero : sumHMSet (the PureMultiset (MkHMSet BoxLeaf)) = intToBoxInt 0
+0 prfBoxCoreEmptyNormZero : sumHMSet (the PureMultiset (MkHMSet BoxLeaf)) = MkBoxInt 0
 prfBoxCoreEmptyNormZero = Refl
 
 public export
@@ -65,7 +65,7 @@ prfBoxCoreZoomSpaceRoundTrip = Refl
 public export
 0 prfBoxCoreExternalLensNonPerturbing :
   FinScBox.Lenses.applyExternalLens
-    (MkExternalLens (\m => m) (blackShift 1) FinScBox.BlackRedZoom.zeroShift (\m => m))
+    (MkExternalLens (\m => m) (blackShift 1) FinScBox.HereditaryMSet.emptyHMSet (\m => m))
     FinScBox.BlackRedZoom.sampleUnitPairMSet
   = zoomSpace (blackShift 1) FinScBox.BlackRedZoom.sampleUnitPairMSet
 prfBoxCoreExternalLensNonPerturbing = prfExternalLensSpaceZoomMatches
@@ -283,8 +283,8 @@ public export
   let z2 = FinScBox.HereditaryMSet.spreadZHMSet 2
       s2 = FinScBox.HereditaryMSet.MSetSupport z2
       px = FinScBox.HereditaryMSet.polyX
-  in ((FinScBox.HereditaryMSet.MSetSupport FinScBox.HereditaryMSet.emptyPureMSet ==
-         FinScBox.HereditaryMSet.emptyPureMSet) &&
+  in ((FinScBox.HereditaryMSet.MSetSupport (the PureMultiset FinScBox.HereditaryMSet.emptyHMSet) ==
+         FinScBox.HereditaryMSet.emptyHMSet) &&
       (FinScBox.HereditaryMSet.MSetSupport s2 == s2) &&
       (FinScBox.HereditaryMSet.MSetSupport (FinScBox.HereditaryMSet.negHMSet z2) == s2) &&
       (FinScBox.HereditaryMSet.MSetSupport (3 * px - 5 * px * px) ==
@@ -296,7 +296,7 @@ public export
   (let k1  = FinScBox.HereditaryMSet.scalarKeyHMSet 1
        nk1 = FinScBox.HereditaryMSet.negHMSet k1
        smp = FinScBox.BlackRedZoom.sampleUnitPairMSet
-   in (FinScBox.Views.streamPeelWorkHMSet FinScBox.HereditaryMSet.emptyPureMSet ==
+   in (FinScBox.Views.streamPeelWorkHMSet FinScBox.HereditaryMSet.emptyHMSet ==
          MkStreamWorkReport 0 0 0) &&
       (FinScBox.Views.fastPeelWorkHMSet smp ==
          (FinScBox.Views.streamPeelWorkHMSet smp).workSteps) &&

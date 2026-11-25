@@ -21,8 +21,8 @@ For any integer scalar $a$, $a + (-a) \equiv 0$:
 public export
 prop_boxIntNegCancel : Integer -> Bool
 prop_boxIntNegCancel a =
-  let b = intToBoxInt a
-  in (b + negate b) == intToBoxInt 0
+  let b = MkBoxInt a
+  in (b + negate b) == MkBoxInt 0
 ```
 
 ### Property 2: Conservative Quadratic Exchange Invariants
@@ -71,7 +71,7 @@ public export
 prop_blackRedZoomRoundTrip : Nat -> Bool
 prop_blackRedZoomRoundTrip n =
   let k = mod5 n
-  in (addHMSet (blackShift k) (redShift k) == emptyPureMSet) &&
+  in (addHMSet (blackShift k) (redShift k) == emptyHMSet) &&
      (zoomTime  (redShift k) (zoomTime  (blackShift k) sampleUnitPairMSet) == sampleUnitPairMSet) &&
      (zoomSpace (redShift k) (zoomSpace (blackShift k) sampleUnitPairMSet) == sampleUnitPairMSet)
 ```
