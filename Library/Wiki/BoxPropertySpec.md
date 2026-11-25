@@ -83,10 +83,10 @@ For any generator $m \ge 2$ and power $y \in \{1..5\}$, the $y$-th Pythagorean t
 public export
 prop_spreadPolyPythPower : Integer -> Nat -> Bool
 prop_spreadPolyPythPower mRaw n =
-  let y            = S (mod5 n)
-      m            = MkBoxInt (if mRaw < 0 then 2 - mRaw else 2 + mRaw)
-      (_, b1, r1)  = pythPowerTriple 1 m
-      (ay, by, ry) = pythPowerTriple y m
+  let y                       = S (mod5 n)
+      m                       = MkBoxInt (if mRaw < 0 then 2 - mRaw else 2 + mRaw)
+      MkQuadraticTriple _ b1 r1  = pythPowerTriple 1 m
+      MkQuadraticTriple ay by ry = pythPowerTriple y m
   in (ay * ay + by * by == ry * ry) &&
      (evalHomogPolyHMSet y (spreadZHMSet y) (4 * b1 * b1) (r1 * r1) == 4 * by * by)
 ```

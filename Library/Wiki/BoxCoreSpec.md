@@ -188,7 +188,7 @@ public export
       (FinScBox.Box.lookupMaxel b a sq == MkBoxInt 49) &&
       (FinScBox.Box.maxelNodeCount sq == 1) &&
       (FinScBox.Box.transposeMaxel sq == sq) &&
-      FinScBox.Box.isSymBox (FinScBox.Box.toGeneralMaxel sq).rawMaxelBox &&
+      FinScBox.Box.isSymMaxel sq &&
       (FinScBox.Box.maxelNodeCount sp == 4) &&
       (FinScBox.Box.lookupMaxel b (intToSigned 2, ZeroZ) sp == MkBoxInt 49) &&
       (FinScBox.Box.traceMaxel dg == MkBoxInt 5) &&
@@ -296,10 +296,37 @@ public export
   (let k1  = FinScBox.HereditaryMSet.scalarKeyHMSet 1
        nk1 = FinScBox.HereditaryMSet.negHMSet k1
        smp = FinScBox.BlackRedZoom.sampleUnitPairMSet
-   in (FinScBox.Views.streamPeelWorkHMSet FinScBox.HereditaryMSet.emptyHMSet ==
+   in (FinScBox.Views.streamPeelWorkHMSet (the PureMultiset FinScBox.HereditaryMSet.emptyHMSet) ==
          MkStreamWorkReport 0 0 0) &&
       (FinScBox.Views.fastPeelWorkHMSet smp ==
          (FinScBox.Views.streamPeelWorkHMSet smp).workSteps) &&
       (snd (FinScBox.Views.streamMergeWorkHMSet k1 nk1) ==
          MkStreamWorkReport 2 1 0)) = True
 prfStreamPeelWorkLaws = Refl
+
+public export
+0 prfCarrierBitsAndQuadraticMonoid :
+  (let sbPos  = FinScBox.HereditaryMSet.singletonHMSet FinScBox.HereditaryMSet.emptyHMSet PosBit
+       sbNeg  = FinScBox.HereditaryMSet.singletonHMSet FinScBox.HereditaryMSet.emptyHMSet NegBit
+       mbOne  = FinScBox.HereditaryMSet.singletonHMSet FinScBox.HereditaryMSet.emptyHMSet OneBit
+       z2     = FinScBox.HereditaryMSet.spreadZHMSet 2
+       mbRel  = the (HereditaryMSet MultisetBit) (FinScBox.HereditaryMSet.castSupportHMSet z2)
+       g7     = FinScBox.QuadraticExchange.pythGeneratorTriple (MkBoxInt 7)
+       a      = (ZeroZ, ZeroZ)
+       b      = (PosZ 0, ZeroZ)
+       mDa    = FinScBox.Box.singletonMaxelEdge {form = DiagAntisymForm} a a (MkBoxInt 6) <+>
+                FinScBox.Box.singletonMaxelEdge b a (MkBoxInt 8)
+       mOff   = FinScBox.Box.offDiagMaxel mDa
+       mClp   = FinScBox.Box.mapPruneMaxel (\w => if w == MkBoxInt 6 then MkBoxInt 0 else w) mDa
+   in ((sbPos <+> sbNeg) == FinScBox.HereditaryMSet.emptyHMSet) &&
+      (snd (FinScBox.Views.streamMergeWorkHMSet sbPos sbNeg) == MkStreamWorkReport 2 1 0) &&
+      ((mbOne <+> mbOne) == FinScBox.HereditaryMSet.emptyHMSet) &&
+      (FinScBox.HereditaryMSet.castSupportHMSet mbRel == FinScBox.HereditaryMSet.MSetSupport z2) &&
+      (FinScBox.Views.fastPeelWorkHMSet mbRel == (FinScBox.Views.streamPeelWorkHMSet mbRel).workSteps) &&
+      ((neutral <+> g7) == FinScBox.QuadraticExchange.pythPowerTriple 1 (MkBoxInt 7)) &&
+      ((g7 <+> g7) == FinScBox.QuadraticExchange.pythPowerTriple 2 (MkBoxInt 7)) &&
+      FinScBox.Box.isAntisymMaxel mOff &&
+      (mClp == mOff) &&
+      (FinScBox.Box.sumStoredMaxel mOff == MkBoxInt (-8))) = True
+prfCarrierBitsAndQuadraticMonoid = Refl
+```
