@@ -279,15 +279,17 @@ prfBoxCoreGohSpreadPolyAlgebra = Refl
 
 public export
 0 prfMSetSupportIdempotent :
-  let z2 = FinScBox.HereditaryMSet.spreadZHMSet 2
-      s2 = FinScBox.HereditaryMSet.MSetSupport z2
+  let z2 : PureMultiset
+      z2 = FinScBox.HereditaryMSet.spreadZHMSet 2
+      s2 : PureMultiset
+      s2 = FinScBox.HereditaryMSet.castSupportHMSet z2
       px = FinScBox.HereditaryMSet.polyX
-  in ((FinScBox.HereditaryMSet.MSetSupport (the PureMultiset FinScBox.HereditaryMSet.emptyHMSet) ==
+  in ((the PureMultiset (FinScBox.HereditaryMSet.castSupportHMSet (the PureMultiset FinScBox.HereditaryMSet.emptyHMSet)) ==
          FinScBox.HereditaryMSet.emptyHMSet) &&
-      (FinScBox.HereditaryMSet.MSetSupport s2 == s2) &&
-      (FinScBox.HereditaryMSet.MSetSupport (FinScBox.HereditaryMSet.negHMSet z2) == s2) &&
-      (FinScBox.HereditaryMSet.MSetSupport (3 * px - 5 * px * px) ==
-         FinScBox.HereditaryMSet.MSetSupport (px + px * px))) = True
+      (FinScBox.HereditaryMSet.castSupportHMSet s2 == s2) &&
+      (FinScBox.HereditaryMSet.castSupportHMSet (FinScBox.HereditaryMSet.negHMSet z2) == s2) &&
+      (the PureMultiset (FinScBox.HereditaryMSet.castSupportHMSet (3 * px - 5 * px * px)) ==
+         FinScBox.HereditaryMSet.castSupportHMSet (px + px * px))) = True
 prfMSetSupportIdempotent = Refl
 
 public export
@@ -317,15 +319,18 @@ public export
                 FinScBox.Box.singletonMaxelEdge b a (MkBoxInt 8)
        mOff   = FinScBox.Box.offDiagMaxel mDa
        mClp   = FinScBox.Box.mapPruneMaxel (\w => if w == MkBoxInt 6 then MkBoxInt 0 else w) mDa
+       v3     = FinScBox.Interfaces.fromIntegers [3, -2, 1]
    in ((sbPos <+> sbNeg) == FinScBox.HereditaryMSet.emptyHMSet) &&
       (snd (FinScBox.Views.streamMergeWorkHMSet sbPos sbNeg) == MkStreamWorkReport 2 1 0) &&
       ((mbOne <+> mbOne) == FinScBox.HereditaryMSet.emptyHMSet) &&
-      (FinScBox.HereditaryMSet.castSupportHMSet mbRel == FinScBox.HereditaryMSet.MSetSupport z2) &&
+      (FinScBox.HereditaryMSet.castSupportHMSet mbRel == the PureMultiset (FinScBox.HereditaryMSet.castSupportHMSet z2)) &&
       (FinScBox.Views.fastPeelWorkHMSet mbRel == (FinScBox.Views.streamPeelWorkHMSet mbRel).workSteps) &&
       ((neutral <+> g7) == FinScBox.QuadraticExchange.pythPowerTriple 1 (MkBoxInt 7)) &&
       ((g7 <+> g7) == FinScBox.QuadraticExchange.pythPowerTriple 2 (MkBoxInt 7)) &&
       FinScBox.Box.isAntisymMaxel mOff &&
       (mClp == mOff) &&
-      (FinScBox.Box.sumStoredMaxel mOff == MkBoxInt (-8))) = True
+      (FinScBox.Box.sumStoredMaxel mOff == MkBoxInt (-8)) &&
+      ((FinScBox.Interfaces.combine v3 (FinScBox.Interfaces.inverse v3)) == FinScBox.Interfaces.origin {k = Space 3}) &&
+      (FinScBox.Interfaces.indexSpace (FS FZ) (FinScBox.Interfaces.unitSpace {n = 3} (FS FZ)) == PosZ 0)) = True
 prfCarrierBitsAndQuadraticMonoid = Refl
 ```
