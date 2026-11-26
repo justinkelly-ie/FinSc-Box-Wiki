@@ -32,14 +32,14 @@ For any state `(pA, pB, u)` and derived generator $m = 2 + |p_A + p_B| \ge 2$, `
 public export
 prop_quadraticExchangeConserves : Integer -> Integer -> Integer -> Bool
 prop_quadraticExchangeConserves pA pB u =
-  let m  = MkBoxInt (2 + abs (pA + pB))
-      r  = exchangeQuadratic m (MkBoxInt pA) (MkBoxInt pB) (MkBoxInt u)
-      a1 = unwrapBox r.valA
-      b1 = unwrapBox r.valB
-      u1 = unwrapBox r.valU
-      q0 = 2 * (pA * pA + pB * pB) + u * u
-      q1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
-  in (a1 + b1 == pA + pB) && (q1 <= q0)
+  let pAB = MkBoxInt pA
+      pBB = MkBoxInt pB
+      uB  = MkBoxInt u
+      m   = 2 + abs (pAB + pBB)
+      r   = exchangeQuadratic m pAB pBB uB
+      q0  = 2 * (pAB * pAB + pBB * pBB) + uB * uB
+      q1  = 2 * (r.valA * r.valA + r.valB * r.valB) + r.valU * r.valU
+  in (r.valA + r.valB == pAB + pBB) && (q1 <= q0)
 ```
 
 ### Property 3: Canonical Multiset Codec Parity & Round-Trip

@@ -124,10 +124,10 @@ prfBoxCoreUnitAxes2D = Refl
 
 public export
 0 prfBoxCoreExchangeQuadratic7 :
-  (let r  = FinScBox.QuadraticExchange.exchangeQuadratic (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
-       a1 = unwrapBox r.valA
-       b1 = unwrapBox r.valB
-       u1 = unwrapBox r.valU
+  (let r  = FinScBox.QuadraticExchange.exchangeQuadratic 7 100 (-43) 80
+       a1 = r.valA
+       b1 = r.valB
+       u1 = r.valU
        e0 = 2 * (100 * 100 + (-43) * (-43)) + 80 * 80
        e1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
    in (a1 + b1 == 57) && (e1 <= e0)) = True
