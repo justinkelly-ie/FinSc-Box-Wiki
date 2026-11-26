@@ -65,7 +65,7 @@ prfBoxCoreZoomSpaceRoundTrip = Refl
 public export
 0 prfBoxCoreExternalLensNonPerturbing :
   FinScBox.Lenses.applyExternalLens
-    (MkExternalLens (\m => m) (blackShift 1) FinScBox.HereditaryMSet.emptyHMSet (\m => m))
+    (FinScBox.Lenses.zoomedPureLens (blackShift 1) FinScBox.HereditaryMSet.emptyHMSet (\m => m))
     FinScBox.BlackRedZoom.sampleUnitPairMSet
   = zoomSpace (blackShift 1) FinScBox.BlackRedZoom.sampleUnitPairMSet
 prfBoxCoreExternalLensNonPerturbing = prfExternalLensSpaceZoomMatches
@@ -268,14 +268,13 @@ prfBoxCorePaceStreamLaws = Refl
 
 public export
 0 prfBoxCoreGohSpreadPolyAlgebra :
-  ((FinScBox.HereditaryMSet.spreadZHMSet 4 ==
-      FinScBox.HereditaryMSet.gohPsi1 *
-      FinScBox.HereditaryMSet.gohPsi2 *
-      FinScBox.HereditaryMSet.gohPsi4) &&
-   (FinScBox.HereditaryMSet.evalPolyHMSetAt
-      (FinScBox.HereditaryMSet.spreadZHMSet 2)
-      (FinScBox.HereditaryMSet.spreadZHMSet 2) ==
-      FinScBox.HereditaryMSet.spreadZHMSet 4)) = True
+  (let z2   = FinScBox.HereditaryMSet.spreadZHMSet 2
+       z4   = FinScBox.HereditaryMSet.spreadZHMSet 4
+       psi4 = FinScBox.HereditaryMSet.divExactPolyHMSet z4 z2
+   in (psi4 == (FinScBox.HereditaryMSet.polyX - 2) * (FinScBox.HereditaryMSet.polyX - 2)) &&
+      (FinScBox.HereditaryMSet.gohPsiFactor 2 == 4 - FinScBox.HereditaryMSet.polyX) &&
+      (z2 * psi4 == z4) &&
+      (FinScBox.HereditaryMSet.evalPolyHMSetAt z2 z2 == z4)) = True
 prfBoxCoreGohSpreadPolyAlgebra = Refl
 
 public export
