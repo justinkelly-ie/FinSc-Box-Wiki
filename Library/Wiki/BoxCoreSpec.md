@@ -359,3 +359,69 @@ public export
       not (the (MaxelForm Nat Nat) SymForm == AntisymForm)) = True
 prfSterlingBoxCompliance = Refl
 ```
+
+---
+
+## 9. Streaming Peel-Work Ordering, Codec Parity & `BlackRedZoom` Invertibility
+
+Domain-free canonical multisets of increasing complexity (`[] < unitPair < triadA < denseTriad`, where `triadA = {1:2, 2:2, 3:-1}`, `triadB = {1:2, 2:-1, 3:-1}`, `denseTriad = 10 * triadA`) verify strict streaming peel-work monotonicity, exact `Show == renderPureMultiset == decodeCanonicalMultiset` codec round-tripping, complete `[M, -M] -> []` stream-merge annihilation, and exact `zoomSpace` / `zoomTime` invertibility:
+
+```idris
+public export
+boxTriadA : PureMultiset
+boxTriadA =
+  MkHMSet $ setBox (scalarKeyHMSet 3) (MkBoxInt (-1))
+          $ setBox (scalarKeyHMSet 2) (MkBoxInt 2)
+          $ setBox (scalarKeyHMSet 1) (MkBoxInt 2) BoxLeaf
+
+public export
+boxTriadB : PureMultiset
+boxTriadB =
+  MkHMSet $ setBox (scalarKeyHMSet 3) (MkBoxInt (-1))
+          $ setBox (scalarKeyHMSet 2) (MkBoxInt (-1))
+          $ setBox (scalarKeyHMSet 1) (MkBoxInt 2) BoxLeaf
+
+public export
+boxDenseTriad : PureMultiset
+boxDenseTriad = scaleHMSet (MkBoxInt 10) boxTriadA
+
+public export
+checkBoxCodecAndZoomSuite : Bool
+checkBoxCodecAndZoomSuite =
+  let presets : List (String, PureMultiset)
+      presets = [ ("[]", emptyHMSet)
+                , ("{{[]:[-1]}:[-1], {[]:[1]}:[1]}", sampleUnitPairMSet)
+                , ("{{[]:[1]}:[2], {[]:[2]}:[2], {[]:[3]}:[-1]}", boxTriadA)
+                , ("{{[]:[1]}:[2], {[]:[2]}:[-1], {[]:[3]}:[-1]}", boxTriadB)
+                , ("{{[]:[1]}:[20], {[]:[2]}:[20], {[]:[3]}:[-10]}", boxDenseTriad)
+                ]
+      codecOk =
+        all (\(txt, m) =>
+               show m == renderPureMultiset m &&
+               renderPureMultiset m == txt &&
+               (case decodeCanonicalMultiset (show m) of
+                  Just (Element m' _) => m' == m
+                  Nothing             => False))
+            presets
+      wVac   = (streamPeelWorkHMSet (the PureMultiset emptyHMSet)).workSteps
+      wPair  = (streamPeelWorkHMSet sampleUnitPairMSet).workSteps
+      wTri   = (streamPeelWorkHMSet boxTriadA).workSteps
+      wDense = (streamPeelWorkHMSet boxDenseTriad).workSteps
+      workOk = (wVac == 0) && (wVac < wPair) && (wPair < wTri) && (wTri < wDense) &&
+               (fastPeelWorkHMSet boxTriadA == wTri)
+      annih      = snd (streamMergeWorkHMSet sampleUnitPairMSet (-sampleUnitPairMSet))
+      annihOk    = annih.residualL1 == 0 && annih.annihilations == 2
+      shiftZero  = blackShift 1 + redShift 1
+      zoomOk     =
+        (zoomTime (redShift 1) (zoomTime (blackShift 1) sampleUnitPairMSet) == sampleUnitPairMSet) &&
+        (zoomTime shiftZero sampleUnitPairMSet == sampleUnitPairMSet) &&
+        (zoomSpace (redShift 1) (zoomSpace (blackShift 1) boxTriadA) == boxTriadA) &&
+        (zoomSpace shiftZero boxTriadA == boxTriadA)
+  in codecOk && workOk && annihOk && zoomOk
+
+public export
+0 prfBoxTriadFastPeelMatchesStream :
+  FinScBox.Views.fastPeelWorkHMSet Wiki.BoxCoreSpec.boxTriadA
+  = (FinScBox.Views.streamPeelWorkHMSet Wiki.BoxCoreSpec.boxTriadA).workSteps
+prfBoxTriadFastPeelMatchesStream = Refl
+```
