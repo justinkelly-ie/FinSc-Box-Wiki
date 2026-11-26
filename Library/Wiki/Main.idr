@@ -2,6 +2,7 @@ module Wiki.Main
 
 import Wiki.BoxCoreSpec
 import Wiki.BoxPropertySpec
+import Wiki.BoxSterlingSpec
 
 %default total
 
@@ -10,7 +11,7 @@ main = do
   putStrLn "========================================================"
   putStrLn "  FINSC-BOX FOUNDATION WIKI SUITE                       "
   putStrLn "========================================================"
-  putStrLn "  [FinSc-Box] Core Foundation: compile-time QTT 0 Refl proofs verified."
+  putStrLn "  [FinSc-Box] Core Foundation & Sterling Definitions: compile-time QTT 0 Refl proofs verified."
   p2 <- auditBoxProperties
   if p2
     then putStrLn "✨ ALL FINSC-BOX SPECIFICATIONS & QUICKCHECK PASSED ✨"
