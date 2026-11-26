@@ -245,7 +245,7 @@ public export
 prfBoxCoreConsolidatedAlgebra = Refl
 
 public export
-runPaceCycle : Nat -> Integer -> Integer -> BoxInt -> (Nat, Nat, BoxInt)
+runPaceCycle : Nat -> BoxInt -> BoxInt -> BoxInt -> (Nat, Nat, BoxInt)
 runPaceCycle n budget load initBal = go n initBal 0 0
   where
     go : Nat -> BoxInt -> Nat -> Nat -> (Nat, Nat, BoxInt)

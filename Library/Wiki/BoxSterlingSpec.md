@@ -31,7 +31,7 @@ import FinScBox
 | `GohBound cap` | `FinScBox.HereditaryMSet` — `record GohBound (boundSteps : Nat)` | **Yes** | Finite `Nat` yield bound; `Eq (GohBound cap)`. |
 | `AnyGohBound` | `FinScBox.HereditaryMSet` — `MkAnyGohBound (cap : Nat) (bound : GohBound cap)` | **Yes** | Dependent pair of finite `Nat` values; `Eq AnyGohBound`. |
 | `SupportStats` | `FinScBox.HereditaryMSet` — `(nnz, totalMass, maxDeg : Nat)` | **Yes** | Triple of `Nat` metrics; structural `Eq SupportStats`. |
-| `Time` | `FinScBox.HereditaryMSet` — 6-way horizon classifier | **Yes** | Finite sum over `Integer`/`Nat` bounds; `Eq Time`. |
+| `Time` | `FinScBox.HereditaryMSet` — 6-way horizon classifier | **Yes** | Finite sum over `BoxInt`/`Nat` bounds; `Eq Time`. |
 | `StreamStep a` | `FinScBox.HereditaryMSet` — `StreamDone \| StreamSkip \| StreamYield a` | **Yes** | Sterling whenever `a` has `Eq` (`Eq a => Eq (StreamStep a)`). |
 | `StreamFreezeReason` | `FinScBox.HereditaryMSet` — 3-way freeze outcome | **Yes** | Finite 3-constructor enumeration; `Eq StreamFreezeReason`. |
 | `SolidifiedStream t cap a` | `FinScBox.HereditaryMSet` — 7-field static freeze relic | **Yes** | Sterling whenever `a` has `Eq`: all 7 fields checked in `Eq` (`remainingYield` & `remainingSteps` included). |
@@ -39,7 +39,7 @@ import FinScBox
 | `DualChannelView c` | `FinScBox.Views` — `(posChannel, negChannel : HereditaryMSet c)` | **Yes** | **Recognition:** `isCanonicalDualChannels` (canonical + `disjointDualSupports`). **Equality:** `Eq (DualChannelView c)`. |
 | `StreamWorkReport` | `FinScBox.Views` — `(workSteps, annihilations, residualL1 : Nat)` | **Yes** | Triple of `Nat` counters; `Eq StreamWorkReport`. |
 | `QuadraticPairResult` | `FinScBox.QuadraticExchange` — `(valA, valB, valU : BoxInt)` | **Yes** | Triple of `BoxInt` values; `Eq QuadraticPairResult`. |
-| `QuadraticTriple` | `FinScBox.QuadraticExchange` — `(qtA, qtB, qtR : Integer)` | **Yes** | **Recognition:** `isQuadraticTriple` (`qtR > 0 && qtA^2 + qtB^2 == qtR^2`). **Equality:** componentwise `Eq QuadraticTriple`. |
+| `QuadraticTriple` | `FinScBox.QuadraticExchange` — `(qtA, qtB, qtR : BoxInt)` | **Yes** | **Recognition:** `isQuadraticTriple` (`qtR > 0 && qtA^2 + qtB^2 == qtR^2`). **Equality:** componentwise `Eq QuadraticTriple`. |
 | `TimeStream t a` | `FinScBox.HereditaryMSet` — `(startTick : Nat, stepAt : Nat -> StreamStep a)` | **No (Procedure)** | Wraps an unbounded generating procedure `Nat -> StreamStep a`; extensional equality over all `Nat` is not finitely decidable until frozen into a `SolidifiedStream`. |
 | `ExternalLens src out` | `FinScBox.Lenses` — `(focus, spaceShift, timeShift, project)` | **No (Procedure)** | Bundles projection functions `src -> PureMultiset` and `PureMultiset -> out`. |
 | `PureObservation uIn out` | `FinScBox.Lenses` — linear `1 uOut` witness with `0 same` | **No (Linear Handle)** | QTT `1` linear non-interference wrapper certifying read-only inspection (`uOut = uIn`); equality applies to its extracted value `val : out`. |

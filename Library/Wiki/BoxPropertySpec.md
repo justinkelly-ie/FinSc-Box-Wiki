@@ -49,7 +49,7 @@ For any signed scalar Laurent shift $n$, `renderPureMultiset` matches `Show` ver
 public export
 prop_codecScalarRoundTrip : Integer -> Bool
 prop_codecScalarRoundTrip n =
-  let m   = scalarKeyHMSet n
+  let m   = scalarKeyHMSet (cast n)
       txt = renderPureMultiset m
   in (txt == show m) &&
      isValidPureMultisetText txt &&
