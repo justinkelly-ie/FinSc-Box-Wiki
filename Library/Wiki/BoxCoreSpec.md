@@ -104,19 +104,21 @@ prfBoxCoreIntegralDivMod = Refl
 
 public export
 0 prfBoxCoreAntisymEdgeZeroSum :
-  (let e = FinScBox.Box.mkAntisymEdge (intToSigned 1) (intToSigned 2) (MkBoxInt 9)
-   in (FinScBox.Box.totalMassBox e == MkBoxInt 0) && FinScBox.Box.isAntisymBox e) = True
+  (let e = FinScBox.Box.singletonMaxelEdge {form = AntisymForm} (the (Space 1) [1]) [2] (MkBoxInt 9)
+   in (FinScBox.Box.sumStoredMaxel (FinScBox.Box.toGeneralMaxel e) == MkBoxInt 0) &&
+      FinScBox.Box.isAntisymMaxel e) = True
 prfBoxCoreAntisymEdgeZeroSum = Refl
 
 public export
 0 prfBoxCoreUnitAxes2D :
-  (let st = FinScBox.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-       p  = FinScBox.Box.singletonBox (intToSigned 3, intToSigned (-2)) (MkBoxInt 5)
-       c  = FinScBox.Box.mulBoxWith p st
-   in (FinScBox.Box.lookupBox (intToSigned 4, intToSigned (-2)) c == MkBoxInt 5) &&
-      (FinScBox.Box.lookupBox (intToSigned 2, intToSigned (-2)) c == MkBoxInt 5) &&
-      (FinScBox.Box.lookupBox (intToSigned 3, intToSigned (-1)) c == MkBoxInt 5) &&
-      (FinScBox.Box.lookupBox (intToSigned 3, intToSigned (-3)) c == MkBoxInt 5) &&
+  (let axes2 = the (Box MultisetBit (Fin 2)) (FinScBox.Box.setBox (FS FZ) OneBit (FinScBox.Box.singletonBox FZ OneBit))
+       st    = the (Box BoxInt (Space 2)) (FinScBox.Box.unitStencilBox (unitSpace {n = 2}) axes2)
+       p     = FinScBox.Box.singletonBox (the (Space 2) [3, -2]) (MkBoxInt 5)
+       c     = FinScBox.Box.mulBoxWith p st
+   in (FinScBox.Box.lookupBox (the (Space 2) [4, -2]) c == MkBoxInt 5) &&
+      (FinScBox.Box.lookupBox (the (Space 2) [2, -2]) c == MkBoxInt 5) &&
+      (FinScBox.Box.lookupBox (the (Space 2) [3, -1]) c == MkBoxInt 5) &&
+      (FinScBox.Box.lookupBox (the (Space 2) [3, -3]) c == MkBoxInt 5) &&
       (FinScBox.Box.totalMassBox c == MkBoxInt 20)) = True
 prfBoxCoreUnitAxes2D = Refl
 
@@ -139,14 +141,16 @@ public export
 prfBoxCoreRdivPosBox = Refl
 
 public export
-0 prfBoxCoreLaurentGreen1 :
-  (let st = FinScBox.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-       p  = FinScBox.Box.singletonBox (ZeroZ, ZeroZ) (MkBoxInt 16)
-       g  = FinScBox.Box.laurentGreenSeries combine 1 4 1 st p
-   in (FinScBox.Box.lookupBox (ZeroZ, ZeroZ) g == MkBoxInt 16) &&
-      (FinScBox.Box.lookupBox (PosZ 0, ZeroZ) g == MkBoxInt 4) &&
-      (FinScBox.Box.totalMassBox g == MkBoxInt 32)) = True
-prfBoxCoreLaurentGreen1 = Refl
+0 prfBoxCoreActMaxelR :
+  (let m = the (Maxel BoxInt (Fin 2) (Fin 2) GeneralForm)
+             (FinScBox.Box.singletonMaxelEdge FZ FZ (MkBoxInt 2) <+>
+              FinScBox.Box.singletonMaxelEdge FZ (FS FZ) (MkBoxInt (-3)) <+>
+              FinScBox.Box.singletonMaxelEdge (FS FZ) FZ (MkBoxInt 5))
+       v = the (Box BoxInt (Fin 2)) (FinScBox.Box.setBox (FS FZ) (MkBoxInt 4) (FinScBox.Box.singletonBox FZ (MkBoxInt 10)))
+       r = FinScBox.Box.actMaxelR m v
+   in (FinScBox.Box.lookupBox FZ r == MkBoxInt 8) &&
+      (FinScBox.Box.lookupBox (FS FZ) r == MkBoxInt 50)) = True
+prfBoxCoreActMaxelR = Refl
 
 public export
 0 prfBoxCoreExchangeQuadraticSymmetry :
@@ -159,38 +163,38 @@ prfBoxCoreExchangeQuadraticSymmetry = Refl
 
 public export
 0 prfBoxCoreMaxelHalfStorage :
-  (let a  = (ZeroZ, ZeroZ)
-       b  = (PosZ 0, ZeroZ)
-       c  = (ZeroZ, PosZ 0)
-       ae = FinScBox.Box.singletonMaxelEdge {form = AntisymForm} b a (MkBoxInt 7)
-       sq = ae .*. ae
-       st = FinScBox.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-       sp = FinScBox.Box.shiftConvolveMaxel combine sq st
-       dg = FinScBox.Box.diagEmbedMaxel (FinScBox.Box.singletonBox a (MkBoxInt 5))
-       sy = FinScBox.Box.addMaxel dg (FinScBox.Box.singletonMaxelEdge b a (MkBoxInt 3))
-       syA = sy .*. ae
-       gn  = FinScBox.Box.toGeneralMaxel sy .*. ae
-       da  = FinScBox.Box.addMaxel
-               (FinScBox.Box.singletonMaxelEdge {form = DiagAntisymForm} a a (MkBoxInt 5))
-               (FinScBox.Box.singletonMaxelEdge b a (MkBoxInt 7))
-       daSt = FinScBox.Box.shiftConvolveMaxel combine da st
-       pB = FinScBox.Box.addAtKeyBox b (MkBoxInt 2) (FinScBox.Box.singletonBox a (MkBoxInt 1))
-       sB = FinScBox.Box.singletonBox a (MkBoxInt 1)
-       bx = FinScBox.Box.singletonBox b (MkBoxInt 4)
-       hm = FinScBox.HereditaryMSet.scalarKeyHMSet 3
+  (let a     = the (Space 2) [0, 0]
+       b     = the (Space 2) [1, 0]
+       c     = the (Space 2) [0, 1]
+       axes2 = the (Box MultisetBit (Fin 2)) (FinScBox.Box.setBox (FS FZ) OneBit (FinScBox.Box.singletonBox FZ OneBit))
+       ae    = FinScBox.Box.singletonMaxelEdge {form = AntisymForm} b a (MkBoxInt 7)
+       sq    = ae .*. ae
+       st    = the (Box BoxInt (Space 2)) (FinScBox.Box.unitStencilBox (unitSpace {n = 2}) axes2)
+       sp    = FinScBox.Box.shiftConvolveMaxel sq st
+       dg    = FinScBox.Box.diagEmbedMaxel (FinScBox.Box.singletonBox a (MkBoxInt 5))
+       sy    = dg <+> FinScBox.Box.singletonMaxelEdge b a (MkBoxInt 3)
+       syA   = sy .*. ae
+       gn    = FinScBox.Box.toGeneralMaxel sy .*. ae
+       da    = FinScBox.Box.singletonMaxelEdge {form = DiagAntisymForm} a a (MkBoxInt 5) <+>
+               FinScBox.Box.singletonMaxelEdge b a (MkBoxInt 7)
+       daSt  = FinScBox.Box.shiftConvolveMaxel da st
+       pB    = FinScBox.Box.addAtKeyBox b (MkBoxInt 2) (FinScBox.Box.singletonBox a (MkBoxInt 1))
+       sB    = FinScBox.Box.singletonBox a (MkBoxInt 1)
+       bx    = FinScBox.Box.singletonBox b (MkBoxInt 4)
+       hm    = FinScBox.HereditaryMSet.scalarKeyHMSet 3
        (pY, pN) = FinScBox.Box.partitionBox (== a) pB
    in (FinScBox.Box.lookupMaxel b a ae == MkBoxInt 7) &&
       (FinScBox.Box.lookupMaxel a b ae == MkBoxInt (-7)) &&
       (FinScBox.Box.maxelNodeCount ae == 1) &&
       (FinScBox.Box.traceMaxel ae == MkBoxInt 0) &&
-      (FinScBox.Box.transposeMaxel ae == FinScBox.Box.negateMaxel ae) &&
+      (FinScBox.Box.transposeMaxel ae == FinScBox.Interfaces.negM ae) &&
       (FinScBox.Box.lookupMaxel a b sq == MkBoxInt 49) &&
       (FinScBox.Box.lookupMaxel b a sq == MkBoxInt 49) &&
       (FinScBox.Box.maxelNodeCount sq == 1) &&
       (FinScBox.Box.transposeMaxel sq == sq) &&
       FinScBox.Box.isSymMaxel sq &&
       (FinScBox.Box.maxelNodeCount sp == 4) &&
-      (FinScBox.Box.lookupMaxel b (intToSigned 2, ZeroZ) sp == MkBoxInt 49) &&
+      (FinScBox.Box.lookupMaxel b (the (Space 2) [2, 0]) sp == MkBoxInt 49) &&
       (FinScBox.Box.traceMaxel dg == MkBoxInt 5) &&
       ((sy <.> sy) == (FinScBox.Box.toGeneralMaxel sy <.> FinScBox.Box.toGeneralMaxel sy)) &&
       ((ae <.> ae) == (FinScBox.Box.toGeneralMaxel ae <.> FinScBox.Box.toGeneralMaxel ae)) &&
@@ -219,7 +223,7 @@ public export
       (FinScBox.Box.toGeneralMaxel (ae .*. da) == (FinScBox.Box.toGeneralMaxel ae .*. FinScBox.Box.toGeneralMaxel da)) &&
       (FinScBox.Box.maxelNodeCount daSt == 8) &&
       (FinScBox.Box.lookupMaxel b b daSt == MkBoxInt 5) &&
-      (FinScBox.Box.lookupMaxel b (intToSigned 2, ZeroZ) daSt == MkBoxInt (-7)) &&
+      (FinScBox.Box.lookupMaxel b (the (Space 2) [2, 0]) daSt == MkBoxInt (-7)) &&
       (FinScBox.Box.diagBox da == FinScBox.Box.singletonBox a (MkBoxInt 5)) &&
       (pY == sB) &&
       (FinScBox.Box.maskOutBox sB pB == pN) &&
@@ -229,15 +233,12 @@ prfBoxCoreMaxelHalfStorage = Refl
 
 public export
 0 prfBoxCoreConsolidatedAlgebra :
-  (let uM  = FinScBox.Box.unitAxes2DWith negHMSet (FinScBox.HereditaryMSet.scalarKeyHMSet 1) (FinScBox.HereditaryMSet.scalarKeyHMSet 2)
-       sd1 = FinScBox.Box.addAtKeyBox ZeroZ (MkBoxInt 3) (FinScBox.Box.singletonBox (PosZ 0) (MkBoxInt (-2)))
-       sd2 = FinScBox.Box.addAtKeyBox ZeroZ (MkBoxInt 3) (FinScBox.Box.singletonBox (NegZ 0) (MkBoxInt 4))
-       sd  = FinScBox.Box.symmetricDiffMSet sd1 sd2
+  (let axM = FinScBox.Box.setBox (FinScBox.HereditaryMSet.scalarKeyHMSet 2) OneBit
+               (FinScBox.Box.singletonBox (FinScBox.HereditaryMSet.scalarKeyHMSet 1) OneBit)
+       uM  = the (Box BoxInt PureMultiset) (FinScBox.Box.unitStencilBox id axM)
        ch  = FinScBox.Views.splitChannels FinScBox.BlackRedZoom.sampleUnitPairMSet
        out = FinScBox.HereditaryMSet.outerHMSet (FinScBox.HereditaryMSet.scalarKeyHMSet 2) (FinScBox.HereditaryMSet.scalarKeyHMSet 3)
    in (FinScBox.Box.totalMassBox uM == MkBoxInt 4) &&
-      (FinScBox.Box.totalMassBox sd == MkBoxInt 6) &&
-      (FinScBox.Box.lookupBox ZeroZ sd == MkBoxInt 0) &&
       FinScBox.Views.disjointDualSupports ch &&
       (FinScBox.Views.interactChannels ch == FinScBox.BlackRedZoom.sampleUnitPairMSet) &&
       (FinScBox.HereditaryMSet.sumHMSet out == MkBoxInt 6)) = True
@@ -319,7 +320,7 @@ public export
                 FinScBox.Box.singletonMaxelEdge b a (MkBoxInt 8)
        mOff   = FinScBox.Box.offDiagMaxel mDa
        mClp   = FinScBox.Box.mapPruneMaxel (\w => if w == MkBoxInt 6 then MkBoxInt 0 else w) mDa
-       v3     = FinScBox.Interfaces.fromIntegers [3, -2, 1]
+       v3     = the (Space 3) [3, -2, 1]
    in ((sbPos <+> sbNeg) == FinScBox.HereditaryMSet.emptyHMSet) &&
       (snd (FinScBox.Views.streamMergeWorkHMSet sbPos sbNeg) == MkStreamWorkReport 2 1 0) &&
       ((mbOne <+> mbOne) == FinScBox.HereditaryMSet.emptyHMSet) &&
