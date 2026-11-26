@@ -23,7 +23,7 @@ import FinScBox
 | `MultisetBit` | `FinScBox.Interfaces` — `EmptyBit \| OneBit` | **Yes** | Finite 2-constructor inductive type ($\mathbb{Z}_2$ support); structural `Eq MultisetBit`. |
 | `SignedCoord` | `FinScBox.Interfaces` — `ZeroZ \| PosZ Nat \| NegZ Nat` | **Yes** | Canonical unique zero (`ZeroZ`); structural `Eq SignedCoord`. |
 | `Space n` | `FinScBox.Interfaces` — `Nil \| (::) SignedCoord (Space n)` | **Yes** | Length-indexed vector of `SignedCoord`; componentwise `Eq (Space n)`. |
-| `Box c k` | `FinScBox.Box` — `BoxLeaf \| BoxNode Nat (Box c k) k c (Box c k)` | **Yes** | **Recognition:** `checkBoxBoundsBy` (non-zero weights, exact height cache, AVL balance, strict key order). **Equality:** `structuralBoxTreeEqual` (`BoxZipper` in-order scan ignoring tree shape). |
+| `Box c k` | `FinScBox.Box` — `BoxLeaf \| BoxNode Nat (Box c k) k c (Box c k)` | **Yes** | **Recognition:** `isCanonicalBox` / `isCanonicalBoxBy` (`checkBoxBoundsBy` for non-zero weights, exact height cache, AVL balance, strict key order) + polymorphic `recognizeBy` / `toSubsetBy`. **Equality:** `structuralBoxTreeEqual` (`BoxZipper` in-order scan ignoring tree shape). |
 | `MaxelForm a b` | `FinScBox.Box` — `GeneralForm \| SymForm \| AntisymForm \| DiagAntisymForm` | **Yes** | Finite 4-constructor symmetry family; `eqMaxelForm` / `Eq (MaxelForm a b)`. |
 | `MaxelFormTag form` | `FinScBox.Box` — singleton runtime witness for `MaxelForm` | **Yes** | Indexed singleton for known `form`; `Eq (MaxelFormTag form)`. |
 | `Maxel c a b form` | `FinScBox.Box` — `record Maxel (rawMaxelBox : Box c (a, b))` | **Yes** | **Recognition:** `isCanonicalMaxel` (`checkBoxBoundsBy` + half-storage `x <= y` or `x < y`). **Equality:** `Eq (Maxel c a b form)` on canonical half-storage. |
@@ -31,7 +31,7 @@ import FinScBox
 | `GohBound cap` | `FinScBox.HereditaryMSet` — `record GohBound (boundSteps : Nat)` | **Yes** | Finite `Nat` yield bound; `Eq (GohBound cap)`. |
 | `AnyGohBound` | `FinScBox.HereditaryMSet` — `MkAnyGohBound (cap : Nat) (bound : GohBound cap)` | **Yes** | Dependent pair of finite `Nat` values; `Eq AnyGohBound`. |
 | `SupportStats` | `FinScBox.HereditaryMSet` — `(nnz, totalMass, maxDeg : Nat)` | **Yes** | Triple of `Nat` metrics; structural `Eq SupportStats`. |
-| `Time` | `FinScBox.HereditaryMSet` — 6-way horizon classifier | **Yes** | Finite sum over `BoxInt`/`Nat` bounds; `Eq Time`. |
+| `Time` | `FinScBox.HereditaryMSet` — 6-way horizon classifier | **Yes** | **Recognition:** `isValidTime` (`low <= high` on `StaticTime low high`). **Equality:** `Eq Time`. |
 | `StreamStep a` | `FinScBox.HereditaryMSet` — `StreamDone \| StreamSkip \| StreamYield a` | **Yes** | Sterling whenever `a` has `Eq` (`Eq a => Eq (StreamStep a)`). |
 | `StreamFreezeReason` | `FinScBox.HereditaryMSet` — 3-way freeze outcome | **Yes** | Finite 3-constructor enumeration; `Eq StreamFreezeReason`. |
 | `SolidifiedStream t cap a` | `FinScBox.HereditaryMSet` — 7-field static freeze relic | **Yes** | Sterling whenever `a` has `Eq`: all 7 fields checked in `Eq` (`remainingYield` & `remainingSteps` included). |
@@ -66,11 +66,15 @@ public export
        s2      = MkSolidifiedStream {frozenTime = StaticTime 0 1, cap = 1}
                    (MkBoxInt 1) NaturalCompletion 1 0 1 (MkGohBound 1) 5
    in (bOrder1 == bOrder2) &&
-      isJust (checkBoxBoundsBy (\_ => True) bOrder1) &&
+      isCanonicalBox bOrder1 &&
       isCanonicalMaxel mGood &&
       not (isCanonicalMaxel mBad) &&
       isQuadraticTriple qtGood &&
       not (isQuadraticTriple qtBad) &&
+      isJust (toSubsetBy isQuadraticTriple qtGood) &&
+      isNothing (toSubsetBy isQuadraticTriple qtBad) &&
+      isValidTime (StaticTime 0 1) &&
+      not (isValidTime (StaticTime 5 0)) &&
       isCanonicalHMSet smp &&
       isCanonicalDualChannels dc &&
       (interactChannels dc == smp) &&
