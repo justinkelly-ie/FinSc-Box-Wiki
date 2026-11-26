@@ -334,4 +334,28 @@ public export
       ((FinScBox.Interfaces.combine v3 (FinScBox.Interfaces.inverse v3)) == FinScBox.Interfaces.origin {k = Space 3}) &&
       (FinScBox.Interfaces.indexSpace (FS FZ) (FinScBox.Interfaces.unitSpace {n = 3} (FS FZ)) == PosZ 0)) = True
 prfCarrierBitsAndQuadraticMonoid = Refl
+
+public export
+0 prfSterlingBoxCompliance :
+  (let k1  = FinScBox.HereditaryMSet.scalarKeyHMSet 1
+       nk1 = FinScBox.HereditaryMSet.negHMSet k1
+       smp = FinScBox.BlackRedZoom.sampleUnitPairMSet
+       mOk = FinScBox.Box.singletonMaxelEdge {form = SymForm} (the Nat 2) (the Nat 1) (MkBoxInt 5)
+       mBd = MkMaxel {form = SymForm} (FinScBox.Box.singletonBox (the Nat 2, the Nat 1) (MkBoxInt 5))
+       g7  = FinScBox.QuadraticExchange.pythGeneratorTriple (MkBoxInt 7)
+       tBd = MkQuadraticTriple 1 2 3
+       dc  = FinScBox.Views.splitChannels smp
+   in FinScBox.Box.isCanonicalMaxel mOk &&
+      not (FinScBox.Box.isCanonicalMaxel mBd) &&
+      FinScBox.QuadraticExchange.isQuadraticTriple g7 &&
+      not (FinScBox.QuadraticExchange.isQuadraticTriple tBd) &&
+      (FinScBox.Views.viewAsAntiBox k1 == FinScBox.Views.viewAsAntiBox k1) &&
+      (dc == dc) &&
+      FinScBox.Views.isCanonicalDualChannels dc &&
+      (FinScBox.HereditaryMSet.collectSupportStats
+         (the (Box BoxInt PureMultiset) (FinScBox.Box.singletonBox FinScBox.HereditaryMSet.emptyHMSet (MkBoxInt 3)))
+       == MkSupportStats 1 3 0) &&
+      (the (MaxelForm Nat Nat) GeneralForm == GeneralForm) &&
+      not (the (MaxelForm Nat Nat) SymForm == AntisymForm)) = True
+prfSterlingBoxCompliance = Refl
 ```
